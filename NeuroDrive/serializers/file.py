@@ -1,6 +1,8 @@
 import os
 import secrets
 import mimetypes
+from PIL import Image
+from io import BytesIO
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
@@ -15,6 +17,23 @@ from NeuroDrive.serializers.shared_access import SharedAccessSerializer
 from main.utils.utils import get_file_metadata
 
 s3_client = S3Service()
+
+
+def remove_exif(image_file):
+    """Remove EXIF metadata from an image file"""
+    try:
+        image = Image.open(image_file)
+        data = list(image.getdata())
+        new_image = Image.new(image.mode, image.size)
+        new_image.putdata(data)
+
+        output = BytesIO()
+        new_image.save(output, format=image.format)
+        output.seek(0)
+        return output
+    except Exception as e:
+        print(f"Error removing EXIF: {e}")
+        return image_file
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -149,6 +168,25 @@ class FileSerializer(serializers.ModelSerializer):
         is_remove_metadata = validated_data.pop("is_remove_metadata", False)
         if is_remove_metadata:
             instance.metadata = {}
+            url = s3_client.generate_presigned_url(instance.s3_url)
+            if instance.content_type and instance.content_type.startswith("image"):
+                try:
+                    file = s3_client.download_file(url)
+                    if not file:
+                        raise ValueError("File could not be downloaded from S3.")
+
+                    file_without_exif = remove_exif(file)
+                    s3_key = f"neurodrive/{request.directory.id}/{instance.name}"
+                    s3_url = s3_client.upload_file(file_without_exif, s3_key)
+                    instance.s3_url = s3_url
+
+                    if os.path.exists(file):
+                        os.remove(file)
+
+                except Exception as e:
+                    raise serializers.ValidationError(
+                        {"error": f"EXIF removal failed: {e}"}
+                    )
 
         file = validated_data.pop("file", None)
         if file:
