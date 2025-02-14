@@ -1,4 +1,7 @@
+import os
 import logging
+import requests
+
 from django.conf import settings
 from urllib.parse import urlparse
 
@@ -68,3 +71,23 @@ class S3Service:
         except Exception as e:
             logger.error(f"Error deleting file from S3: {e}")
             raise Exception(f"Error deleting file: {e}")
+
+    def download_file(self, url):
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+
+            filename = url.split("/")[-1].split("?")[0]
+            file_path = os.path.join(os.getcwd(), filename)
+
+            with open(file_path, "wb") as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+
+            if os.path.exists(file_path):
+                return file_path
+            else:
+                return None
+
+        except requests.exceptions.RequestException as e:
+            return None

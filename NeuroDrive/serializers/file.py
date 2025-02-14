@@ -12,7 +12,8 @@ from NeuroDrive.models.file import File
 from NeuroDrive.models.shared_access import SharedAccess
 from NeuroDrive.serializers.shared_access import SharedAccessSerializer
 
-from main.utils.utils import get_file_metadata
+from main.utils.utils import get_file_metadata, remove_exif, remove_pdf_metadata
+
 
 s3_client = S3Service()
 
@@ -148,7 +149,32 @@ class FileSerializer(serializers.ModelSerializer):
 
         is_remove_metadata = validated_data.pop("is_remove_metadata", False)
         if is_remove_metadata:
-            instance.metadata = {}
+            url = s3_client.generate_presigned_url(instance.s3_url)
+            if instance.content_type:
+                try:
+                    file = s3_client.download_file(url)
+                    if not file:
+                        raise ValueError("File could not be downloaded from S3.")
+
+                    s3_key = f"neurodrive/{request.directory.id}/{instance.name}"
+
+                    if instance.content_type.startswith("image"):
+                        file_without_exif = remove_exif(file)
+                        s3_url = s3_client.upload_file(file_without_exif, s3_key)
+                        instance.s3_url = s3_url
+
+                    elif instance.content_type == "application/pdf":
+                        file_without_metadata = remove_pdf_metadata(file)
+                        s3_url = s3_client.upload_file(file_without_metadata, s3_key)
+                        instance.s3_url = s3_url
+
+                    if os.path.exists(file):
+                        os.remove(file)
+
+                except Exception as e:
+                    raise serializers.ValidationError(
+                        {"error": f"Metadata removal failed: {e}"}
+                    )
 
         file = validated_data.pop("file", None)
         if file:
