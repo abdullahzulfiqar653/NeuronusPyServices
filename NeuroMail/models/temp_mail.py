@@ -7,11 +7,10 @@ from main.models.abstract.base import BaseModel
 class TempMail(BaseModel):
     user = models.OneToOneField(
         User,
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE,
         related_name="tempmail",
     )
-    email = models.EmailField(unique=True, blank=True, null=True)
+    email = models.EmailField(unique=True, null=True)
 
     def __str__(self):
         return f"{self.user} - {self.email}"

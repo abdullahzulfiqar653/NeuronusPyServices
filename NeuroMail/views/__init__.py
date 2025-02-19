@@ -3,7 +3,7 @@ from NeuroMail.views.mailbox import (
     MailBoxRetrieveDeleteView,
     MailBoxExistenceCheckView,
 )
-from NeuroMail.views.temp_mail import TempMailView
+
 from NeuroMail.views.email import (
     EmailFileRetrieveView,
     MailboxEmailListCreateView,
@@ -12,6 +12,7 @@ from NeuroMail.views.email import (
     MailboxEmailDeleteFromTrashView,
     MailboxEmailRestoreFromTrashView,
 )
+from NeuroMail.views.temp_mail import TempMailRetrieveAPIView
 from NeuroMail.views.email_extension import EmailExtensionListView
 from NeuroMail.views.email_ai_template import EmailAiTemplateListView
 from NeuroMail.views.email_rephrase import RephraseEmailCreateView
@@ -29,5 +30,5 @@ __all__ = [
     "MailboxEmailDeleteFromTrashView",
     "MailboxEmailRestoreFromTrashView",
     "EmailFileRetrieveView",
-    "TempMailView",
+    "TempMailRetrieveAPIView",
 ]

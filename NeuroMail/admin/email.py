@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from NeuroMail.models import Email, EmailAttachment, EmailRecipient ,TempMail
+from NeuroMail.models import Email, EmailAttachment, EmailRecipient, TempMail
 
 
 class EmailAttachmentInline(admin.TabularInline):
