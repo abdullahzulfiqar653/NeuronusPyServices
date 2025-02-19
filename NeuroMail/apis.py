@@ -16,6 +16,7 @@ from NeuroMail.views import (
     MailboxEmailRetrieveUpdateView,
     MailboxEmailDeleteFromTrashView,
     MailboxEmailRestoreFromTrashView,
+    TempMailView,
 )
 
 from main.views import (
@@ -113,4 +114,9 @@ urlpatterns = [
         FileDownloadAPIView.as_view(),
         name="file-download-view",
     ),
+
+    # ==============================================
+    #temp-mails
+    # =====================================
+    path('emails/temp-mail/', TempMailView.as_view(), name='temp-mail'),
 ]
