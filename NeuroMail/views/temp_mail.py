@@ -1,9 +1,11 @@
-import os
-import requests, time, hashlib
-from drf_yasg.utils import swagger_auto_schema
+import requests, time, hashlib, os
+
 from drf_yasg import openapi
-from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+
 from rest_framework import generics
+from rest_framework.response import Response
+
 from NeuroMail.models.temp_mail import TempMail
 
 API_HOST = os.getenv("API_HOST")
@@ -15,7 +17,7 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
-                name="ischange",
+                name="is_change",
                 in_=openapi.IN_QUERY,
                 description="Set to `true` to generate a new email.",
                 type=openapi.TYPE_BOOLEAN,
@@ -23,7 +25,7 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
         ]
     )
     def get(self, request, *args, **kwargs):
-        is_change = request.query_params.get("ischange", "false")
+        is_change = request.query_params.get("is_change", "false")
         user = request.user
         temp_mail, created = TempMail.objects.get_or_create(user=user)
         if created or is_change == "true":

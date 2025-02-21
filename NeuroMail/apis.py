@@ -64,7 +64,10 @@ urlpatterns = [
         MailBoxRetrieveDeleteView.as_view(),
         name="mailbox-retrive-delete",
     ),
-    path('emails/temp-mail/', TempMailRetrieveAPIView.as_view(), name='temp-mail'),
+    # =====================================================
+    # temporary mail
+    # =====================================================
+    path('temporary-mail/', TempMailRetrieveAPIView.as_view(), name='temp-mail'),
     # =====================================================
     # Email
     # =====================================================
