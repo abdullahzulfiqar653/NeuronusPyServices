@@ -1,4 +1,7 @@
-import requests, time, hashlib, os
+import os
+import time
+import hashlib
+import requests
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -29,13 +32,16 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
         user = request.user
         temp_mail, created = TempMail.objects.get_or_create(user=user)
         if created or is_change == "true":
-            temp_mail.email = self.generate_new_email()
+            email = self.generate_new_email()
+            if isinstance(email, Response):
+                return email
+            temp_mail.email = email
             temp_mail.save()
-        email = temp_mail.email
-        if not email:
-            return Response({"error": "Failed to generate email"}, status=500)
 
+        email = temp_mail.email
         emails = self.get_emails(email)
+        if isinstance(email, Response):
+            return email
         return Response({"email": email, "inbox": emails})
 
     def generate_new_email(self):
@@ -48,15 +54,13 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
             return new_email
         except requests.exceptions.RequestException as e:
             print(f"Debug: API Error - {e}")
-            return None
-
-    def get_email_hash(self, email):
-        if not email:
-            raise ValueError("Error: Email is None, cannot generate hash.")
-        return hashlib.md5(email.encode("utf-8")).hexdigest()
+            return Response(
+                {"detail": "Unable to generate email, please try again in an hour."},
+                status=400,
+            )
 
     def get_emails(self, email):
-        email_hash = self.get_email_hash(email)
+        email_hash = hashlib.md5(email.encode("utf-8")).hexdigest()
         endpoint = f"https://{API_HOST}/request/mail/id/{email_hash}/"
 
         try:
@@ -65,4 +69,8 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
             emails = response.json()
             return emails
         except requests.exceptions.RequestException as e:
-            return {"error": f"API Error - {str(e)}"}
+            print(f"Debug: API Error - {e}")
+            return Response(
+                {"detail": "Unable to fetch emails, please refresh your page."},
+                status=400,
+            )
