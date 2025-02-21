@@ -8,8 +8,10 @@ from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 
 from NeuroMail.models.temp_mail import TempMail
+from NeuroMail.serializers.temp_mail import TempEmailFakeSerializer
 
 API_HOST = os.getenv("API_HOST")
 API_KEY = os.getenv("API_KEY")
@@ -17,6 +19,8 @@ HEADERS = {"x-rapidapi-key": API_KEY, "x-rapidapi-host": API_HOST}
 
 
 class TempMailRetrieveAPIView(generics.RetrieveAPIView):
+    serializer_class = TempEmailFakeSerializer
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -32,16 +36,11 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
         user = request.user
         temp_mail, created = TempMail.objects.get_or_create(user=user)
         if created or is_change == "true":
-            email = self.generate_new_email()
-            if isinstance(email, Response):
-                return email
-            temp_mail.email = email
+            temp_mail.email = self.generate_new_email()
             temp_mail.save()
 
         email = temp_mail.email
         emails = self.get_emails(email)
-        if isinstance(email, Response):
-            return email
         return Response({"email": email, "inbox": emails})
 
     def generate_new_email(self):
@@ -54,9 +53,8 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
             return new_email
         except requests.exceptions.RequestException as e:
             print(f"Debug: API Error - {e}")
-            return Response(
-                {"detail": "Unable to generate email, please try again in an hour."},
-                status=400,
+            raise APIException(
+                {"detail": "Unable to generate email, please try again in an hour."}
             )
 
     def get_emails(self, email):
@@ -70,7 +68,6 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
             return emails
         except requests.exceptions.RequestException as e:
             print(f"Debug: API Error - {e}")
-            return Response(
-                {"detail": "Unable to fetch emails, please refresh your page."},
-                status=400,
+            raise APIException(
+                {"detail": "Unable to fetch emails, please refresh your page."}
             )
