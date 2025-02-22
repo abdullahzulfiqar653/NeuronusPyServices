@@ -8,6 +8,7 @@ from NeuroMail.views import (
     EmailFileRetrieveView,
     EmailExtensionListView,
     EmailAiTemplateListView,
+    TempMailRetrieveAPIView,
     RephraseEmailCreateView,
     MailBoxRetrieveDeleteView,
     MailBoxExistenceCheckView,
@@ -62,6 +63,10 @@ urlpatterns = [
         MailBoxRetrieveDeleteView.as_view(),
         name="mailbox-retrive-delete",
     ),
+    # =====================================================
+    # Temp mail
+    # =====================================================
+    path("temp-mail/", TempMailRetrieveAPIView.as_view(), name="temp-mail"),
     # =====================================================
     # Email
     # =====================================================
