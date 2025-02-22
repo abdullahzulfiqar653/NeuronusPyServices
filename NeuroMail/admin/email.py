@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from NeuroMail.models import Email, EmailAttachment, EmailRecipient, TempMail
+from NeuroMail.models import Email, EmailAttachment, EmailRecipient
 
 
 class EmailAttachmentInline(admin.TabularInline):
@@ -71,4 +71,3 @@ class EmailAdmin(admin.ModelAdmin):
 
 # Register the model with the custom admin class
 admin.site.register(Email, EmailAdmin)
-admin.site.register(TempMail)
