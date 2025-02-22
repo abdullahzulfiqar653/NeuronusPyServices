@@ -31,7 +31,7 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
         obj = super().get_object()
 
-        if self.request.method == "DELETE":
+        if self.request.method in ["PUT", "PATCH", "DELETE"]:
             return obj
 
         if obj.password:

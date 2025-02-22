@@ -1,3 +1,5 @@
+import os
+import secrets
 import mimetypes
 
 from rest_framework import serializers
@@ -10,8 +12,8 @@ from NeuroDrive.models.file import File
 from NeuroDrive.models.shared_access import SharedAccess
 from NeuroDrive.serializers.shared_access import SharedAccessSerializer
 
+from main.utils.utils import get_file_metadata, remove_exif, remove_pdf_metadata
 
-from main.utils.utils import get_file_metadata
 
 s3_client = S3Service()
 
@@ -87,6 +89,18 @@ class FileSerializer(serializers.ModelSerializer):
             pass
         return data
 
+    def get_unique_filename(self, name):
+        request = self.context.get("request")
+        user = request.user
+        directory = request.directory
+        base, ext = os.path.splitext(name)
+
+        if user.files.filter(directory=directory, name=name).exists():
+            random_str = secrets.token_hex(4)
+            return f"{base}_{random_str}{ext}"
+
+        return name
+
     def create(self, validated_data):
         _ = validated_data.pop("is_starred", None)
         _ = validated_data.pop("is_remove_password", None)
@@ -95,6 +109,7 @@ class FileSerializer(serializers.ModelSerializer):
         file = validated_data.pop("file")
         request = self.context.get("request")
         name = validated_data.get("name", file.name).replace(" ", "_")
+        name = self.get_unique_filename(name)
         content_type, _ = mimetypes.guess_type(file.name)
         s3_key = f"neurodrive/{request.directory.id}/{name}"
         s3_url = s3_client.upload_file(file, s3_key)
@@ -105,9 +120,7 @@ class FileSerializer(serializers.ModelSerializer):
         validated_data["directory"] = request.directory
         validated_data["content_type"] = content_type or "application/octet-stream"
         validated_data["metadata"] = get_file_metadata(file)
-
-        if validated_data.get("is_starred"):
-            del validated_data["is_starred"]
+        validated_data["metadata"]["file_name"] = name
 
         return super().create(validated_data)
 
@@ -136,7 +149,32 @@ class FileSerializer(serializers.ModelSerializer):
 
         is_remove_metadata = validated_data.pop("is_remove_metadata", False)
         if is_remove_metadata:
-            instance.metadata = {}
+            url = s3_client.generate_presigned_url(instance.s3_url)
+            if instance.content_type:
+                try:
+                    file = s3_client.download_file(url)
+                    if not file:
+                        raise ValueError("File could not be downloaded from S3.")
+
+                    s3_key = f"neurodrive/{request.directory.id}/{instance.name}"
+
+                    if instance.content_type.startswith("image"):
+                        file_without_exif = remove_exif(file)
+                        s3_url = s3_client.upload_file(file_without_exif, s3_key)
+                        instance.s3_url = s3_url
+
+                    elif instance.content_type == "application/pdf":
+                        file_without_metadata = remove_pdf_metadata(file)
+                        s3_url = s3_client.upload_file(file_without_metadata, s3_key)
+                        instance.s3_url = s3_url
+
+                    if os.path.exists(file):
+                        os.remove(file)
+
+                except Exception as e:
+                    raise serializers.ValidationError(
+                        {"error": f"Metadata removal failed: {e}"}
+                    )
 
         file = validated_data.pop("file", None)
         if file:
@@ -155,4 +193,7 @@ class FileSerializer(serializers.ModelSerializer):
         if hasattr(request, "directory") and hasattr(request, "file"):
             validated_data["directory"] = request.directory
 
+        if validated_data.get("name"):
+            name = self.get_unique_filename(validated_data["name"])
+            validated_data["name"] = name
         return super().update(instance, validated_data)

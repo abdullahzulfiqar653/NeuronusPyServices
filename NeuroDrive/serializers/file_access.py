@@ -38,7 +38,7 @@ class FileAccessSerializer(serializers.Serializer):
         if obj.password:
             password = validated_data.get("password")
             if not check_password(password, obj.password):
-                raise serializers.ValidationError({"password": "Incorrect password."})
+                raise serializers.ValidationError({"password": ["Incorrect password."]})
 
         s3_client = S3Service()
         obj.url = s3_client.generate_presigned_url(obj.s3_url)

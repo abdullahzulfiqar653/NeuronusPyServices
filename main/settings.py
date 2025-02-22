@@ -19,7 +19,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 HOST_CONFIG = {
     "DEV": {
-        "default": "dev.admin.azsoft.dev",
+        "default": "dev.neuroadmin.azsoft.dev",
         "NeuroRsa": "dev.api.neurorsa.xyz",
         "NeuroDrive": "drive.api.azsoft.dev",
         "NeuroMail": "dev.api.neuromail.space",
