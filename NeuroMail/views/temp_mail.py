@@ -65,6 +65,8 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
             response = requests.get(endpoint, headers=HEADERS)
             response.raise_for_status()
             emails = response.json()
+            if "error" in emails:
+                return []
             return emails
         except requests.exceptions.RequestException as e:
             print(f"Debug: API Error - {e}")
