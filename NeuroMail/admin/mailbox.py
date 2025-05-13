@@ -12,7 +12,7 @@ admin.site.register(MailBox, MailBoxAdmin)
 
 
 class EmailExtensionAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")
+    list_display = ("id", "name", "is_active")
 
 
 admin.site.register(EmailExtension, EmailExtensionAdmin)
