@@ -11,4 +11,5 @@ class EmailExtensionListView(generics.ListAPIView):
     serializer_class = EmailExtensionSerializer
 
     def get_queryset(self):
-        return super().get_queryset()
+        """Filter the queryset based on the is_active field."""
+        return self.queryset.filter(is_active=True)
