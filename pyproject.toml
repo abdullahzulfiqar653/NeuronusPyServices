@@ -30,6 +30,7 @@ django-hosts = "^6.0"
 drf-yasg = "^1.21.8"
 boto3 = "^1.35.90"
 pypdf2 = "^3.0.1"
+pgpy = "^0.6.0"
 
 
 [build-system]

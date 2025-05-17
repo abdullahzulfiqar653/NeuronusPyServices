@@ -1,3 +1,4 @@
+import pgpy
 import secrets
 
 from rest_framework import serializers
@@ -32,21 +33,38 @@ class KeyPairSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-
-        email = validated_data.get("email")
+        email = validated_data.get("email", "")
         passphrase = validated_data.get("passphrase")
         passphrase_bytes = passphrase.encode("utf-8") if passphrase else None
 
         name = validated_data.get("name") or f"pair_{secrets.token_hex(3)}"
-        private_key, public_key = generate_keypair(passphrase_bytes)
+        # private_key, public_key = generate_keypair(passphrase_bytes)
+
+        # Generate a new PGP key
+        key = pgpy.PGPKey.new(pgpy.constants.PubKeyAlgorithm.RSAEncryptOrSign, 4096)
+
+        # Create a user ID
+        user_id = pgpy.PGPUID.new(name, email=email)
+
+        # Bind the user ID to the key
+        key.add_uid(user_id, usage={pgpy.constants.KeyFlags.Sign, pgpy.constants.KeyFlags.EncryptCommunications},
+                    hashes=[pgpy.constants.HashAlgorithm.SHA256],
+                    ciphers=[pgpy.constants.SymmetricKeyAlgorithm.AES256],
+                    compression=[pgpy.constants.CompressionAlgorithm.ZLIB])
+
+        print("\n🔹 PUBLIC KEY (Upload This to PGP Websites) 🔹\n")
+        public_key = str(key.pubkey)
+        print("\n🔒 PRIVATE KEY (DO NOT SHARE!) 🔒\n")
+        private_key = str(key)
+        print("\n✅ PGP keys generated successfully!")
 
         key_pair = KeyPair.objects.create(
             user=user,
             name=name,
             email=email,
             passphrase=passphrase,
-            private_key=private_key.decode("utf-8"),
-            public_key=public_key.decode("utf-8"),
+            private_key=private_key,
+            public_key=public_key
         )
         return key_pair
 

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from NeuroRsa.models.keypair import KeyPair
 from NeuroRsa.utils import decrypt_message
+from pgpy import PGPKey, PGPMessage
 
 
 def get_passphrase(passphrase, keypair):
@@ -26,18 +27,18 @@ class DecryptMessageSerializer(serializers.Serializer):
     def validate_message(self, value):
         if not value:
             raise serializers.ValidationError("Message is required.")
-        try:
-            encrypted_message = (
-                value.replace("-----BEGIN PGP MESSAGE BLOCK-----\n", "")
-                .replace("\n-----END PGP MESSAGE BLOCK-----", "")
-                .replace("\n", "")
-            )
-            encrypted_messages = [
-                bytes.fromhex(hs) for hs in encrypted_message.split("-") if hs
-            ]
-        except:  # noqa
-            raise serializers.ValidationError("Message is not valid.")
-        return encrypted_messages
+        # try:
+        #     encrypted_message = (
+        #         value.replace("-----BEGIN PGP MESSAGE BLOCK-----\n", "")
+        #         .replace("\n-----END PGP MESSAGE BLOCK-----", "")
+        #         .replace("\n", "")
+        #     )
+        #     encrypted_messages = [
+        #         bytes.fromhex(hs) for hs in encrypted_message.split("-") if hs
+        #     ]
+        # except:  # noqa
+        #     raise serializers.ValidationError("Message is not valid.")
+        return value
 
     def validate(self, data):
         keypair_id = data.get("keypair_id")
@@ -52,39 +53,23 @@ class DecryptMessageSerializer(serializers.Serializer):
         keypair = KeyPair.objects.get(id=keypair_id, user=user)
         if not keypair.passphrase:
             return data
-
-        # if not passphrase:
-        #     raise serializers.ValidationError(
-        #         {
-        #             "passphrase": [
-        #                 "Your keypair is encrypted with a passphrase. Please provide it to use the keypair."
-        #             ]
-        #         }
-        #     )
-
-        # if not KeyPair.objects.filter(id=keypair.id, passphrase=passphrase).exists():
-        #     raise serializers.ValidationError(
-        #         {"passphrase": ["Invalid passphrase. Please try again."]}
-        #     )
         return data
 
     def create(self, validated_data):
         keypair = KeyPair.objects.get(id=validated_data.get("keypair_id"))
-        # passphrase = get_passphrase(validated_data.get("passphrase"), keypair)
-        private_key_pem = keypair.private_key.encode("utf-8")
         try:
-            decrypted_message = decrypt_message(
-                validated_data.get("message"), private_key_pem, None
-            )
+            private_key, _ = PGPKey.from_blob(keypair.private_key)
+
+            # Parse the encrypted message
+            encrypted_message = PGPMessage.from_blob(validated_data.get("message"))
+
+            # Decrypt the message
+            with private_key.unlock("row"):
+                decrypted_message = private_key.decrypt(encrypted_message)
+            print("\n🔓 Decrypted Message: 🔓\n")
+            print(decrypted_message)
         except:  # noqa
             raise serializers.ValidationError(
-                {
-                    "error": [
-                        f"""Decryption failed: {
-                            'Required passphrase for this keypair.' if keypair.passphrase else
-                            'Invalid keypair selected.'
-                        }"""
-                    ]
-                }
+                {"error": ["Decryption failed, Invalid keypair selected."]}
             )
-        return {"message": decrypted_message.decode()}
+        return {"message": decrypted_message.message}
