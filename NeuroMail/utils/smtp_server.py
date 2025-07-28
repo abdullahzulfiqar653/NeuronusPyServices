@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from NeuroMail.models.email_log import EmailLog
 
 SMTP_SERVER = settings.MAIL_SERVER
 SMTP_PORT = 587  # Use 587 for TLS, 465 for SSL
@@ -50,8 +51,13 @@ def send_email(
     plain_body = body.strip()  # In case you want to handle plain text
     msg.attach(MIMEText(plain_body, "plain"))
 
-    # Attach HTML version
-    msg.attach(MIMEText(body, "html"))
+
+    email_log = EmailLog.objects.create()
+    pixel_url = f"http://127.0.0.1:8000/track/{email_log.email_id}/"
+    tracking_img = f'<img src="{pixel_url}" width="1" height="1" style="display:none;" alt="" />'
+    body_with_tracking = body + tracking_img
+
+    msg.attach(MIMEText(body_with_tracking, "html"))
 
     # Attach files if any
     if attachments:

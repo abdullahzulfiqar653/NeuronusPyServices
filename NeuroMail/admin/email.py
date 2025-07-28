@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from NeuroMail.models import Email, EmailAttachment, EmailRecipient, TempMail
+from NeuroMail.models.email_log import EmailLog
 
 
 class EmailAttachmentInline(admin.TabularInline):
@@ -68,7 +69,13 @@ class EmailAdmin(admin.ModelAdmin):
 
     inlines = [EmailAttachmentInline, EmailRecipientInline]
 
-
 # Register the model with the custom admin class
 admin.site.register(Email, EmailAdmin)
 admin.site.register(TempMail)
+
+@admin.register(EmailLog)
+class EmailLogAdmin(admin.ModelAdmin):
+    list_display = ('email_id', 'is_seen', 'seen_at')
+    search_fields = ('email_id',)
+    list_filter = ('is_seen',)
+    readonly_fields = ('email_id', 'is_seen', 'seen_at')
