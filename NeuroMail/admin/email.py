@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from NeuroMail.models import Email, EmailAttachment, EmailRecipient, TempMail
-from NeuroMail.models.email_log import EmailLog
 
 
 class EmailAttachmentInline(admin.TabularInline):
@@ -29,6 +28,8 @@ class EmailAdmin(admin.ModelAdmin):
         "mailbox",
         "is_starred",
         "is_seen",
+        "is_viewed_by_recepient", 
+        "seen_at",  
         "total_size",
         "mailbox_email",
     )
@@ -41,7 +42,7 @@ class EmailAdmin(admin.ModelAdmin):
     mailbox_email.short_description = "Mailbox Email"
 
     search_fields = ("id", "subject", "email_type", "mailbox__email")
-    list_filter = ("email_type", "is_starred", "is_seen")
+    list_filter = ("email_type", "is_starred", "is_seen", "is_viewed_by_recepient")
 
     fieldsets = (
         (
@@ -54,13 +55,14 @@ class EmailAdmin(admin.ModelAdmin):
                     "primary_email_type",
                     "is_starred",
                     "is_seen",
+                    "is_viewed_by_recepient",  
+                    "seen_at",  
                     "total_size",
                     "mailbox",
                 ),
             },
         ),
     )
-
     readonly_fields = ("total_size",)
 
     def get_form(self, request, obj=None, **kwargs):
@@ -73,9 +75,3 @@ class EmailAdmin(admin.ModelAdmin):
 admin.site.register(Email, EmailAdmin)
 admin.site.register(TempMail)
 
-@admin.register(EmailLog)
-class EmailLogAdmin(admin.ModelAdmin):
-    list_display = ('email_id', 'is_seen', 'seen_at')
-    search_fields = ('email_id',)
-    list_filter = ('is_seen',)
-    readonly_fields = ('email_id', 'is_seen', 'seen_at')
