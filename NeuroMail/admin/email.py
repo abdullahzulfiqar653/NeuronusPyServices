@@ -28,6 +28,8 @@ class EmailAdmin(admin.ModelAdmin):
         "mailbox",
         "is_starred",
         "is_seen",
+        "is_viewed_by_recepient", 
+        "seen_at",  
         "total_size",
         "mailbox_email",
     )
@@ -40,7 +42,7 @@ class EmailAdmin(admin.ModelAdmin):
     mailbox_email.short_description = "Mailbox Email"
 
     search_fields = ("id", "subject", "email_type", "mailbox__email")
-    list_filter = ("email_type", "is_starred", "is_seen")
+    list_filter = ("email_type", "is_starred", "is_seen", "is_viewed_by_recepient")
 
     fieldsets = (
         (
@@ -53,13 +55,14 @@ class EmailAdmin(admin.ModelAdmin):
                     "primary_email_type",
                     "is_starred",
                     "is_seen",
+                    "is_viewed_by_recepient",  
+                    "seen_at",  
                     "total_size",
                     "mailbox",
                 ),
             },
         ),
     )
-
     readonly_fields = ("total_size",)
 
     def get_form(self, request, obj=None, **kwargs):
@@ -67,7 +70,6 @@ class EmailAdmin(admin.ModelAdmin):
         return form
 
     inlines = [EmailAttachmentInline, EmailRecipientInline]
-
 
 # Register the model with the custom admin class
 admin.site.register(Email, EmailAdmin)

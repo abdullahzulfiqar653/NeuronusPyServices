@@ -31,6 +31,8 @@ class Email(BaseModel):
     is_starred = models.BooleanField(default=False)
     is_seen = models.BooleanField(default=False)
     total_size = models.BigIntegerField(default=0)
+    is_viewed_by_recepient = models.BooleanField(default=False)
+    seen_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.subject} - {self.email_type} ({self.mailbox.email})"

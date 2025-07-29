@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from drf_yasg.views import get_schema_view
 from rest_framework.permissions import AllowAny
+from NeuroMail.views.email_tracking import email_tracker
 
 
 schema_view = get_schema_view(
@@ -21,6 +22,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("api/", include("NeuroMail.apis")),
+    path("track/<uuid:email_id>/", email_tracker, name="pixel-tracker"),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
