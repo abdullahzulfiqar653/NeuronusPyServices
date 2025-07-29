@@ -1,7 +1,6 @@
 from django.db import models
 from main.models.abstract.base import BaseModel
 from NeuroMail.models.mailbox import MailBox
-import uuid
 
 class Email(BaseModel):
     UID_PREFIX = 120
@@ -30,7 +29,7 @@ class Email(BaseModel):
     primary_email_type = models.CharField(
         max_length=10, choices=EMAIL_TYPE_CHOICES, null=True, blank=True
     )
-    imap_id = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
+    imap_id = models.CharField(max_length=100, unique=True)
     is_starred = models.BooleanField(default=False)
     is_seen = models.BooleanField(default=False)
     total_size = models.BigIntegerField(default=0)
