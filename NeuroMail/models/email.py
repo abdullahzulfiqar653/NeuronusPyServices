@@ -30,7 +30,7 @@ class Email(BaseModel):
     primary_email_type = models.CharField(
         max_length=10, choices=EMAIL_TYPE_CHOICES, null=True, blank=True
     )
-    uid = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
+    imap_id = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
     is_starred = models.BooleanField(default=False)
     is_seen = models.BooleanField(default=False)
     total_size = models.BigIntegerField(default=0)

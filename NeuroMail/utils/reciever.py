@@ -19,7 +19,6 @@ def get_recieved_emails(mailbox, user):
         s3_client = S3Service()
 
         for email_data in emails:
-            # Create Email instance
             new_email = Email(
                 id=f"{Email.UID_PREFIX}{secrets.token_hex(6)}",
                 mailbox=mailbox,
@@ -28,11 +27,10 @@ def get_recieved_emails(mailbox, user):
                 is_seen=email_data.get("is_seen", False),
                 email_type=email_data.get("email_type", Email.INBOX),
                 primary_email_type=email_data.get("email_type", Email.INBOX),
-                uid=secrets.token_hex(16),
+                imap_id=secrets.token_hex(16),  # ✅ updated here
             )
             total_size = len(new_email.body.encode("utf-8"))
 
-            # Create Recipient instances
             for recipient_data in email_data.get("recipients", []):
                 recipients.append(
                     EmailRecipient(
@@ -42,13 +40,11 @@ def get_recieved_emails(mailbox, user):
                     )
                 )
 
-            # Create Attachment instances
             for attachment in email_data.get("attachments", []):
                 filename = attachment["filename"].replace(" ", "_")
                 attachment_data = attachment["data"]
                 s3_key = f"neuromail/{new_email.id}/{filename}"
 
-                # Upload to S3
                 s3_url = s3_client.upload_file(
                     ContentFile(attachment_data, name=filename),
                     s3_key,
@@ -70,13 +66,11 @@ def get_recieved_emails(mailbox, user):
             new_emails.append(new_email)
             total_emails_size += total_size
 
-        # Save all data in bulk
         Email.objects.bulk_create(new_emails)
         EmailRecipient.objects.bulk_create(recipients)
         EmailAttachment.objects.bulk_create(attachments)
-
-        # Add total size to user profile
         user.profile.add_size(total_emails_size)
+
 
 def get_spam_emails(mailbox, user):
     emails = fetch_spam_emails(mailbox.email, mailbox.password)
@@ -97,7 +91,7 @@ def get_spam_emails(mailbox, user):
                 is_seen=email_data.get("is_seen", False),
                 email_type=Email.SPAM,
                 primary_email_type=Email.SPAM,
-                uid=secrets.token_hex(16),
+                imap_id=secrets.token_hex(16),  # ✅ updated here
             )
             total_size = len(new_email.body.encode("utf-8"))
 
@@ -139,5 +133,4 @@ def get_spam_emails(mailbox, user):
         Email.objects.bulk_create(new_emails)
         EmailRecipient.objects.bulk_create(recipients)
         EmailAttachment.objects.bulk_create(attachments)
-
         user.profile.add_size(total_emails_size)

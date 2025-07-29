@@ -94,6 +94,7 @@ def fetch_inbox_emails(username, password):
                     body=body,
                     is_seen=False,
                     email_type="inbox",
+                    imap_id=e_id.decode(), 
                     created_at=timezone.now(),
                 )
 
@@ -183,6 +184,7 @@ def fetch_spam_emails(username, password):
                     body=body,
                     is_seen=False,
                     email_type="spam",  
+                    imap_id=e_id.decode(), 
                     created_at=timezone.now(),
                 )
 
