@@ -116,3 +116,90 @@ def fetch_inbox_emails(username, password):
                     )
 
     mail.logout()
+    
+def fetch_spam_emails(username, password):
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+    mail.login(username, password)
+    
+    # 🗂 Select spam folder
+    status, _ = mail.select("[Gmail]/Spam")  # Gmail spam folder
+    if status != "OK":
+        print("Couldn't open spam folder")
+        return
+
+    status, messages = mail.search(None, "UNSEEN")
+    email_ids = messages[0].split()
+
+    for e_id in email_ids:
+        res, msg_data = mail.fetch(e_id, "(RFC822)")
+        mail.store(e_id, "+FLAGS", "\\Seen")  # Mark as seen
+
+        for response_part in msg_data:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1])
+
+                subject = decode_mime_words(msg.get("Subject", ""))
+                from_email = decode_mime_words(msg.get("From", ""))
+                to_emails = decode_mime_words(msg.get("To", ""))
+                cc_emails = decode_mime_words(msg.get("Cc", ""))
+                bcc_emails = decode_mime_words(msg.get("Bcc", ""))
+
+                all_recipients = (
+                    extract_emails(to_emails, "to") +
+                    extract_emails(cc_emails, "cc") +
+                    extract_emails(bcc_emails, "bcc") +
+                    extract_emails(from_email, "from")
+                )
+
+                body = ""
+                attachments = []
+
+                if msg.is_multipart():
+                    for part in msg.walk():
+                        content_type = part.get_content_type()
+                        content_disposition = str(part.get("Content-Disposition"))
+
+                        if content_type == "text/plain" and "attachment" not in content_disposition:
+                            body = part.get_payload(decode=True).decode(errors="ignore")
+                        elif content_type == "text/html" and "attachment" not in content_disposition:
+                            body = part.get_payload(decode=True).decode(errors="ignore")
+
+                        if "attachment" in content_disposition:
+                            filename = part.get_filename()
+                            if filename:
+                                decoded_filename = decode_mime_words(filename)
+                                file_data = part.get_payload(decode=True)
+                                attachments.append({
+                                    "filename": decoded_filename,
+                                    "content_type": content_type,
+                                    "data": file_data
+                                })
+                else:
+                    body = msg.get_payload(decode=True).decode(errors="ignore")
+
+                # 📩 Save as spam email
+                email_obj = Email.objects.create(
+                    subject=subject,
+                    body=body,
+                    is_seen=False,
+                    email_type="spam",  # 🔄 email_type changed from inbox to spam
+                    created_at=timezone.now(),
+                )
+
+                for r in all_recipients:
+                    EmailRecipient.objects.create(
+                        email=email_obj,
+                        name=r["name"],
+                        email_address=r["email"],
+                        recipient_type=r["recipient_type"],
+                    )
+
+                for attachment in attachments:
+                    EmailAttachment.objects.create(
+                        email=email_obj,
+                        filename=attachment["filename"],
+                        content_type=attachment["content_type"],
+                        file=ContentFile(attachment["data"], name=attachment["filename"]),
+                    )
+
+    mail.logout()
