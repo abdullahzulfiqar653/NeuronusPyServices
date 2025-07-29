@@ -6,134 +6,213 @@ from NeuroMail.models import Email, EmailRecipient, EmailAttachment
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
-
 IMAP_SERVER = settings.MAIL_SERVER
-IMAP_PORT = 993
+IMAP_PORT = 993  # SSL Port
 
 
 def decode_mime_words(mime_words):
     decoded_string = ""
     for word, encoding in decode_header(mime_words):
         if isinstance(word, bytes):
-            word = word.decode(encoding if encoding else "utf-8", errors="ignore")
+            word = word.decode(encoding if encoding else "utf-8")
         decoded_string += word
     return decoded_string
 
 
-def get_email_body(msg):
-    body = ""
-    if msg.is_multipart():
-        for part in msg.walk():
-            content_type = part.get_content_type()
-            if content_type == "text/plain" and part.get_content_disposition() is None:
-                charset = part.get_content_charset() or "utf-8"
-                body += part.get_payload(decode=True).decode(charset, errors="ignore")
-                break
-    else:
-        charset = msg.get_content_charset() or "utf-8"
-        body += msg.get_payload(decode=True).decode(charset, errors="ignore")
-    return body
+def extract_emails(email_string, recipient_type):
+    result = []
+    if email_string:
+        addresses = email.utils.getaddresses([email_string])
+        for name, email_addr in addresses:
+            result.append({
+                "name": name,
+                "email": email_addr,
+                "recipient_type": recipient_type
+            })
+    return result
 
 
-def save_attachments(email_obj, msg):
-    for part in msg.walk():
-        if part.get_content_maintype() == 'multipart':
-            continue
-        if part.get('Content-Disposition') is None:
-            continue
+def fetch_inbox_emails(username, password):
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+    mail.login(username, password)
+    mail.select("inbox")
 
-        filename = part.get_filename()
-        if filename:
-            filename = decode_mime_words(filename)
-            file_content = part.get_payload(decode=True)
-            attachment = EmailAttachment(
-                email=email_obj,
-                filename=filename,
-                content_type=part.get_content_type()
-            )
-            attachment.file.save(filename, ContentFile(file_content), save=True)
-
-
-def connect_to_imap():
-    try:
-        imap_server = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
-        imap_server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
-        return imap_server
-    except Exception as e:
-        print(f"IMAP connection failed: {e}")
-        return None
-
-
-def fetch_inbox_emails():
-    imap_server = connect_to_imap()
-    if not imap_server:
-        return
-
-    imap_server.select("inbox")
-    status, email_ids = imap_server.search(None, "ALL")
-    email_ids = email_ids[0].split()
+    status, messages = mail.search(None, "UNSEEN")
+    email_ids = messages[0].split()
 
     for e_id in email_ids:
-        imap_id = e_id.decode()
-        if Email.objects.filter(imap_id=imap_id).exists():
-            continue
+        res, msg_data = mail.fetch(e_id, "(RFC822)")
+        mail.store(e_id, "+FLAGS", "\\Seen")  # Mark as seen
 
-        _, data = imap_server.fetch(e_id, "(RFC822)")
-        raw_email = data[0][1]
-        msg = email.message_from_bytes(raw_email)
+        for response_part in msg_data:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1])
 
-        email_obj = Email.objects.create(
-            imap_id=imap_id,
-            subject=decode_mime_words(msg.get("Subject")),
-            sender=decode_mime_words(msg.get("From")),
-            recipients=decode_mime_words(msg.get("To")),
-            cc=decode_mime_words(msg.get("Cc")),
-            bcc=decode_mime_words(msg.get("Bcc")),
-            date=msg.get("Date"),
-            body=get_email_body(msg),
-        )
+                subject = decode_mime_words(msg.get("Subject", ""))
+                from_email = decode_mime_words(msg.get("From", ""))
+                to_emails = decode_mime_words(msg.get("To", ""))
+                cc_emails = decode_mime_words(msg.get("Cc", ""))
+                bcc_emails = decode_mime_words(msg.get("Bcc", ""))
 
-        save_attachments(email_obj, msg)
+                all_recipients = (
+                    extract_emails(to_emails, "to") +
+                    extract_emails(cc_emails, "cc") +
+                    extract_emails(bcc_emails, "bcc") +
+                    extract_emails(from_email, "from")
+                )
 
-    imap_server.logout()
+                body = ""
+                attachments = []
 
+                if msg.is_multipart():
+                    for part in msg.walk():
+                        content_type = part.get_content_type()
+                        content_disposition = str(part.get("Content-Disposition"))
 
-def fetch_spam_emails():
-    imap_server = connect_to_imap()
-    if not imap_server:
-        return
+                        if content_type == "text/plain" and "attachment" not in content_disposition:
+                            body = part.get_payload(decode=True).decode(errors="ignore")
+                        elif content_type == "text/html" and "attachment" not in content_disposition:
+                            body = part.get_payload(decode=True).decode(errors="ignore")
 
+                        # Handle attachments
+                        if "attachment" in content_disposition:
+                            filename = part.get_filename()
+                            if filename:
+                                decoded_filename = decode_mime_words(filename)
+                                file_data = part.get_payload(decode=True)
+                                attachments.append({
+                                    "filename": decoded_filename,
+                                    "content_type": content_type,
+                                    "data": file_data
+                                })
+                else:
+                    body = msg.get_payload(decode=True).decode(errors="ignore")
+
+                # 📨 Save Email object
+                email_obj = Email.objects.create(
+                    subject=subject,
+                    body=body,
+                    is_seen=False,
+                    email_type="inbox",
+                    imap_id=e_id.decode(), 
+                    created_at=timezone.now(),
+                )
+
+                # 👥 Save recipients (to/from/cc/bcc)
+                for r in all_recipients:
+                    EmailRecipient.objects.create(
+                        email=email_obj,
+                        name=r["name"],
+                        email_address=r["email"],
+                        recipient_type=r["recipient_type"],
+                    )
+
+                # 📎 Save attachments
+                for attachment in attachments:
+                    EmailAttachment.objects.create(
+                        email=email_obj,
+                        filename=attachment["filename"],
+                        content_type=attachment["content_type"],
+                        file=ContentFile(attachment["data"], name=attachment["filename"]),
+                    )
+
+    mail.logout()
+
+def fetch_spam_emails(username, password):
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+    mail.login(username, password)
+
+    # Loop through possible spam/junk folder names
     for spam_folder in ['[Gmail]/Spam', 'Spam', 'Junk']:
         try:
-            imap_server.select(spam_folder)
-            status, email_ids = imap_server.search(None, "ALL")
-            email_ids = email_ids[0].split()
+            status, _ = mail.select(spam_folder)
+            if status != "OK":
+                continue  # Try next folder if this one fails
+
+            status, messages = mail.search(None, "UNSEEN")
+            email_ids = messages[0].split()
 
             for e_id in email_ids:
+                # Skip if already exists in DB
                 imap_id = e_id.decode()
                 if Email.objects.filter(imap_id=imap_id).exists():
                     continue
 
-                _, data = imap_server.fetch(e_id, "(RFC822)")
-                raw_email = data[0][1]
-                msg = email.message_from_bytes(raw_email)
+                res, msg_data = mail.fetch(e_id, "(RFC822)")
+                mail.store(e_id, "+FLAGS", "\\Seen")  # Mark as seen
 
-                email_obj = Email.objects.create(
-                    imap_id=imap_id,
-                    subject=decode_mime_words(msg.get("Subject")),
-                    sender=decode_mime_words(msg.get("From")),
-                    recipients=decode_mime_words(msg.get("To")),
-                    cc=decode_mime_words(msg.get("Cc")),
-                    bcc=decode_mime_words(msg.get("Bcc")),
-                    date=msg.get("Date"),
-                    body=get_email_body(msg),
-                    is_spam=True,
-                )
+                for response_part in msg_data:
+                    if isinstance(response_part, tuple):
+                        msg = email.message_from_bytes(response_part[1])
 
-                save_attachments(email_obj, msg)
+                        subject = decode_mime_words(msg.get("Subject", ""))
+                        from_email = decode_mime_words(msg.get("From", ""))
+                        to_emails = decode_mime_words(msg.get("To", ""))
+                        cc_emails = decode_mime_words(msg.get("Cc", ""))
+                        bcc_emails = decode_mime_words(msg.get("Bcc", ""))
 
-            break
+                        all_recipients = (
+                            extract_emails(to_emails, "to") +
+                            extract_emails(cc_emails, "cc") +
+                            extract_emails(bcc_emails, "bcc") +
+                            extract_emails(from_email, "from")
+                        )
+
+                        body = ""
+                        attachments = []
+
+                        if msg.is_multipart():
+                            for part in msg.walk():
+                                content_type = part.get_content_type()
+                                content_disposition = str(part.get("Content-Disposition"))
+
+                                if content_type == "text/plain" and "attachment" not in content_disposition:
+                                    body = part.get_payload(decode=True).decode(errors="ignore")
+                                elif content_type == "text/html" and "attachment" not in content_disposition:
+                                    body = part.get_payload(decode=True).decode(errors="ignore")
+
+                                if "attachment" in content_disposition:
+                                    filename = part.get_filename()
+                                    if filename:
+                                        decoded_filename = decode_mime_words(filename)
+                                        file_data = part.get_payload(decode=True)
+                                        attachments.append({
+                                            "filename": decoded_filename,
+                                            "content_type": content_type,
+                                            "data": file_data
+                                        })
+                        else:
+                            body = msg.get_payload(decode=True).decode(errors="ignore")
+
+                        # Save as spam email
+                        email_obj = Email.objects.create(
+                            subject=subject,
+                            body=body,
+                            is_seen=False,
+                            email_type="spam",
+                            imap_id=imap_id,
+                            created_at=timezone.now(),
+                        )
+
+                        for r in all_recipients:
+                            EmailRecipient.objects.create(
+                                email=email_obj,
+                                name=r["name"],
+                                email_address=r["email"],
+                                recipient_type=r["recipient_type"],
+                            )
+
+                        for attachment in attachments:
+                            EmailAttachment.objects.create(
+                                email=email_obj,
+                                filename=attachment["filename"],
+                                content_type=attachment["content_type"],
+                                file=ContentFile(attachment["data"], name=attachment["filename"]),
+                            )
+
+            break 
+
         except Exception:
-            continue
+            continue 
 
-    imap_server.logout()
+    mail.logout()

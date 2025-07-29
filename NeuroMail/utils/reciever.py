@@ -4,8 +4,7 @@ from main.services.s3 import S3Service
 from NeuroMail.models.email import Email
 from NeuroMail.models.email_recipient import EmailRecipient
 from NeuroMail.models.email_attachment import EmailAttachment
-from NeuroMail.utils.imap_server import fetch_inbox_emails
-from NeuroMail.utils.imap_server import fetch_spam_emails
+from NeuroMail.utils.imap_server import fetch_inbox_emails, fetch_spam_emails
 
 
 def get_recieved_emails(mailbox, user):
@@ -19,6 +18,10 @@ def get_recieved_emails(mailbox, user):
         s3_client = S3Service()
 
         for email_data in emails:
+            imap_id = email_data.get("imap_id")
+            if not imap_id or Email.objects.filter(imap_id=imap_id).exists():
+                continue
+
             new_email = Email(
                 id=f"{Email.UID_PREFIX}{secrets.token_hex(6)}",
                 mailbox=mailbox,
@@ -27,7 +30,7 @@ def get_recieved_emails(mailbox, user):
                 is_seen=email_data.get("is_seen", False),
                 email_type=email_data.get("email_type", Email.INBOX),
                 primary_email_type=email_data.get("email_type", Email.INBOX),
-                imap_id=secrets.token_hex(16),  # ✅ updated here
+                imap_id=imap_id,
             )
             total_size = len(new_email.body.encode("utf-8"))
 
@@ -83,6 +86,10 @@ def get_spam_emails(mailbox, user):
         s3_client = S3Service()
 
         for email_data in emails:
+            imap_id = email_data.get("imap_id")
+            if not imap_id or Email.objects.filter(imap_id=imap_id).exists():
+                continue
+
             new_email = Email(
                 id=f"{Email.UID_PREFIX}{secrets.token_hex(6)}",
                 mailbox=mailbox,
@@ -91,7 +98,7 @@ def get_spam_emails(mailbox, user):
                 is_seen=email_data.get("is_seen", False),
                 email_type=Email.SPAM,
                 primary_email_type=Email.SPAM,
-                imap_id=secrets.token_hex(16),  # ✅ updated here
+                imap_id=imap_id,
             )
             total_size = len(new_email.body.encode("utf-8"))
 
