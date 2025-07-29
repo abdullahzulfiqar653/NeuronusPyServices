@@ -22,6 +22,7 @@ class EmailRecipientInline(admin.TabularInline):
 class EmailAdmin(admin.ModelAdmin):
     list_display = (
         "id",
+        "uid",
         "subject",
         "email_type",
         "primary_email_type",
