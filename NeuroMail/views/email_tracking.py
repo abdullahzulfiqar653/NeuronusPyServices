@@ -1,13 +1,13 @@
 import base64
 from django.utils import timezone
-from rest_framework.views import APIView
+from django.views import View
 from django.http import HttpResponse
 from NeuroMail.models.email import Email
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 
-class EmailTrackingPixelView(APIView):
+class EmailTrackingPixelView(View):
 
     TRANSPARENT_PIXEL = base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="
