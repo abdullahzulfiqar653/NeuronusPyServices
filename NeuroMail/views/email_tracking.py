@@ -25,7 +25,7 @@ class EmailTrackingPixelView(APIView):
         ],
         responses={200: "1x1 Transparent PNG"},
     )
-    def get(self, request, email_id):
+    def get(self, email_id):
         try:
             email = Email.objects.get(id=email_id)
             if not email.is_viewed_by_recepient:
