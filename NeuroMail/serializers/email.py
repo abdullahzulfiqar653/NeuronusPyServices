@@ -97,7 +97,7 @@ class EmailSerializer(serializers.ModelSerializer):
     # STEP 2: Create email (without body)
      email = Email.objects.create(
         **validated_data,
-        body="",  # Temporarily empty
+        body="",  
         primary_email_type=email_type,
         mailbox=request.mailbox,
         is_seen=True,
