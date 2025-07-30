@@ -105,9 +105,9 @@ class EmailSerializer(serializers.ModelSerializer):
 
     # STEP 3: Append tracking pixel (only for SENT emails)
      if email_type == Email.SENT:
-        tracking_pixel_url = f"http://127.0.0.1:8000/track/{email.id}/"
-        pixel_tag = f'<img src="{tracking_pixel_url}" width="1" height="1" style="display:none;" />'
-        body_content += pixel_tag
+        pixel_url = request.build_absolute_uri(f"/api/track/{email.id}/")
+        tracking_img = f'<img src="{pixel_url}" width="1" height="1" style="display:none;" />'
+        body_content += tracking_img
 
     # STEP 4: Save updated body
      email.body = body_content
