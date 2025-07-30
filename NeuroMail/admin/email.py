@@ -23,17 +23,11 @@ class EmailRecipientInline(admin.TabularInline):
 class EmailAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "imap_id",
-        "subject",
         "email_type",
-        "primary_email_type",
         "mailbox",
         "is_starred",
-        "is_seen",
-        "is_viewed_by_recepient",
-        "viewed_at",
-        "total_size",
-        "mailbox_email",
+        "read",
+        "read_at",
     )
 
     search_fields = ("id", "subject", "email_type", "mailbox__email")
@@ -55,8 +49,8 @@ class EmailAdmin(admin.ModelAdmin):
                     "primary_email_type",
                     "is_starred",
                     "is_seen",
-                    "is_viewed_by_recepient",
-                    "viewed_at",
+                    "is_read_by_recipient",
+                    "read_at",
                     "total_size",
                     "mailbox",
                 ),
@@ -66,13 +60,11 @@ class EmailAdmin(admin.ModelAdmin):
 
     readonly_fields = ("total_size",)
 
-    def mailbox_email(self, obj):
-        return format_html(
-            "<a href='mailto:{}'>{}</a>", obj.mailbox.email, obj.mailbox.email
-        )
+    def read(self, obj) -> bool:
+        return obj.is_read_by_recipient
 
-    mailbox_email.short_description = "Mailbox Email"
-
+    read.boolean = True
+    read.short_description = "read"
     inlines = [EmailAttachmentInline, EmailRecipientInline]
 
 
