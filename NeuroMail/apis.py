@@ -114,7 +114,7 @@ urlpatterns = [
     path(
         "track/<str:email_id>/",
         EmailTrackingPixelView.as_view(),
-        name="email-tracking-pixel"
+        name="email-tracking-pixel",
     ),
     # =====================================================
     # Media

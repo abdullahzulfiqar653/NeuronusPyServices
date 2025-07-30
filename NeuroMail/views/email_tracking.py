@@ -16,9 +16,14 @@ class EmailTrackingPixelView(APIView):
     @swagger_auto_schema(
         operation_description="Tracking pixel to mark email as viewed.",
         manual_parameters=[
-            openapi.Parameter('email_id', openapi.IN_PATH, description="Email ID", type=openapi.TYPE_STRING)
+            openapi.Parameter(
+                "email_id",
+                openapi.IN_PATH,
+                description="Email ID",
+                type=openapi.TYPE_STRING,
+            )
         ],
-        responses={200: '1x1 Transparent PNG'}
+        responses={200: "1x1 Transparent PNG"},
     )
     def get(self, request, email_id):
         try:

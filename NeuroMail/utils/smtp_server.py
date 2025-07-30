@@ -50,7 +50,6 @@ def send_email(
     plain_body = body.strip()  # In case you want to handle plain text
     msg.attach(MIMEText(plain_body, "plain"))
 
-    
     msg.attach(MIMEText(body, "html"))
 
     # Attach files if any
