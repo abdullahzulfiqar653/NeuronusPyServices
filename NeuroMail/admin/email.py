@@ -1,27 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.contrib.admin import SimpleListFilter
 
 from NeuroMail.models import Email, EmailAttachment, EmailRecipient, TempMail
-
-
-# Custom filter for recipient view status
-class RecipientSeenFilter(SimpleListFilter):
-    title = 'Seen by Recipient'
-    parameter_name = 'is_viewed_by_recepient'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('seen', 'Seen'),
-            ('unseen', 'Unseen'),
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() == 'seen':
-            return queryset.filter(is_viewed_by_recepient=True)
-        elif self.value() == 'unseen':
-            return queryset.filter(is_viewed_by_recepient=False)
-        return queryset
 
 
 class EmailAttachmentInline(admin.TabularInline):
@@ -62,7 +42,6 @@ class EmailAdmin(admin.ModelAdmin):
         "email_type",
         "is_starred",
         "is_seen",
-        RecipientSeenFilter,  # Custom seen filter
     )
 
     fieldsets = (
