@@ -27,14 +27,16 @@ class EmailSerializer(serializers.ModelSerializer):
             "body",
             "subject",
             "is_seen",
+            "read_at",
             "created_at",
             "email_type",
             "is_starred",
             "recipients",
             "total_size",
             "attachments",
+            "is_read_by_recipient",
         ]
-        read_only_fields = ["id", "total_size"]
+        read_only_fields = ["id", "total_size", "read_at", "is_read_by_recipient"]
 
     def run_validation(self, data):
         if isinstance(data, QueryDict):
