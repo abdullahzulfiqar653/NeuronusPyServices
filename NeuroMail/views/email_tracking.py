@@ -8,7 +8,7 @@ from drf_yasg import openapi
 
 
 class EmailTrackingPixelView(APIView):
-
+    permission_classes = []
     TRANSPARENT_PIXEL = base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="
     )
@@ -25,12 +25,12 @@ class EmailTrackingPixelView(APIView):
         ],
         responses={200: "1x1 Transparent PNG"},
     )
-    def get(self, email_id):
+    def get(self, request, email_id):
         try:
             email = Email.objects.get(id=email_id)
-            if not email.is_viewed_by_recepient:
-                email.is_viewed_by_recepient = True
-                email.viewed_at = timezone.now()
+            if not email.is_read_by_recipient:
+                email.is_read_by_recipient = True
+                email.read_at = timezone.now()
                 email.save()
         except Email.DoesNotExist:
             pass

@@ -74,6 +74,11 @@ class EmailSerializer(serializers.ModelSerializer):
 
         return super().validate(attrs)
 
+    def get_tracking_img(self, email_id):
+        request = self.context.get("request")
+        pixel_url = request.build_absolute_uri(f"/api/track/{email_id}/")
+        return f'<img src="{pixel_url}" width="1" height="1" style="display:none;" />'
+
     def create(self, validated_data):
         request = self.context.get("request")
         recipients_data = validated_data.pop("recipients", [])
@@ -91,13 +96,9 @@ class EmailSerializer(serializers.ModelSerializer):
                 {"email_type": f"{email_type} is not a valid choice."}
             )
 
-        # STEP 1: Temporarily remove body to append pixel later
-        body_content = validated_data.pop("body", "")
-
         # STEP 2: Create email (without body)
         email = Email.objects.create(
             **validated_data,
-            body="",
             primary_email_type=email_type,
             mailbox=request.mailbox,
             is_seen=True,
@@ -105,15 +106,8 @@ class EmailSerializer(serializers.ModelSerializer):
 
         # STEP 3: Append tracking pixel (only for SENT emails)
         if email_type == Email.SENT:
-            pixel_url = request.build_absolute_uri(f"/api/track/{email.id}/")
-            tracking_img = (
-                f'<img src="{pixel_url}" width="1" height="1" style="display:none;" />'
-            )
-            body_content += tracking_img
-
-        # STEP 4: Save updated body
-        email.body = body_content
-        email.save()
+            body_to_attach = validated_data.get("body")
+            body_to_attach += self.get_tracking_img(email.id)
 
         # STEP 5: Upload attachments to S3
         s3_client = S3Service()
@@ -159,7 +153,7 @@ class EmailSerializer(serializers.ModelSerializer):
             EmailSendThread(
                 send_email,
                 validated_data["subject"],
-                validated_data["body"],
+                body_to_attach,
                 request.mailbox.email,
                 request.mailbox.password,
                 recipients_data,
