@@ -3,7 +3,15 @@ import threading
 
 class EmailSendThread(threading.Thread):
     def __init__(
-        self, emailMethod, subject, body, email, password, recipients, attachments
+        self,
+        emailMethod,
+        subject,
+        body,
+        email,
+        password,
+        recipients,
+        attachments,
+        email_id,
     ) -> None:
         self.emailMethod = emailMethod
         self.subject = subject
@@ -12,6 +20,7 @@ class EmailSendThread(threading.Thread):
         self.password = password
         self.recipients = recipients
         self.attachments = attachments
+        self.email_id = email_id
 
         threading.Thread.__init__(self)
 
@@ -23,6 +32,7 @@ class EmailSendThread(threading.Thread):
             self.password,
             self.recipients,
             self.attachments,
+            self.email_id,
         )
 
 

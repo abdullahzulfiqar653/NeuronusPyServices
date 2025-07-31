@@ -1,9 +1,11 @@
 import os
 import smtplib
 import requests
+
 from django.conf import settings
 from urllib.parse import urlparse
 from email.mime.text import MIMEText
+from NeuroMail.models.email import Email
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
@@ -18,6 +20,7 @@ def send_email(
     password,
     recipients,
     attachments=[],
+    email_id=None,
 ):
     """
     Send an email with the given subject, body, and attachments.
@@ -84,6 +87,8 @@ def send_email(
         # Send the email to all recipients, including Bcc
         server.sendmail(from_email, all_emails, msg.as_string())
         print("Email sent successfully!")
+        if email_id:
+            Email.objects.filter(id=email_id).update(is_sent_success=True)
     except Exception as e:
         print(f"Failed to send email: {e}")
     finally:
