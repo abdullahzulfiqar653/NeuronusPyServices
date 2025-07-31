@@ -34,9 +34,16 @@ class EmailSerializer(serializers.ModelSerializer):
             "recipients",
             "total_size",
             "attachments",
+            "is_sent_success",
             "is_read_by_recipient",
         ]
-        read_only_fields = ["id", "total_size", "read_at", "is_read_by_recipient"]
+        read_only_fields = [
+            "id",
+            "read_at",
+            "total_size",
+            "is_sent_success",
+            "is_read_by_recipient",
+        ]
 
     def run_validation(self, data):
         if isinstance(data, QueryDict):
@@ -160,6 +167,7 @@ class EmailSerializer(serializers.ModelSerializer):
                 request.mailbox.password,
                 recipients_data,
                 attachment_urls,
+                email.id,
             ).start()
 
         return email
