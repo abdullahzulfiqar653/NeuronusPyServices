@@ -26,6 +26,24 @@ class EmailTrackingPixelView(APIView):
         responses={200: "1x1 Transparent PNG"},
     )
     def get(self, request, email_id):
+        user_agent = request.META.get("HTTP_USER_AGENT", "").lower()
+        ip_address = request.META.get("REMOTE_ADDR")
+
+        # Common prefetching agents to ignore
+        suspicious_agents = [
+            "googleimageproxy",
+            "outlook",  # Often prefetches from Microsoft cloud
+            "thunderbird",
+            "mozilla/5.0 (windows nt",  # Some auto-fetching occurs
+            "curl",  # Security scanners sometimes use this
+            "python-requests",
+            "applewebkit",  # Sometimes prefetches, e.g. Apple Mail
+        ]
+
+        if any(agent in user_agent for agent in suspicious_agents):
+            # Log it, but don't mark as read
+            print(f"📬 Pixel prefetch ignored from UA: {user_agent}, IP: {ip_address}")
+            return HttpResponse(self.TRANSPARENT_PIXEL, content_type="image/png")
         try:
             email = Email.objects.get(id=email_id)
             if not email.is_read_by_recipient:
