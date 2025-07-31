@@ -1,10 +1,14 @@
 import base64
+import logging
 from django.utils import timezone
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from NeuroMail.models.email import Email
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class EmailTrackingPixelView(APIView):
@@ -39,10 +43,15 @@ class EmailTrackingPixelView(APIView):
             "python-requests",
             "applewebkit",  # Sometimes prefetches, e.g. Apple Mail
         ]
-
+        logger.info(f"user-agent: {user_agent}, ip-address: {ip_address}")
+        logger.info(
+            f"Is condition true to not mark as read: {any(agent in user_agent for agent in suspicious_agents)}"
+        )
         if any(agent in user_agent for agent in suspicious_agents):
             # Log it, but don't mark as read
-            print(f"📬 Pixel prefetch ignored from UA: {user_agent}, IP: {ip_address}")
+            logger.info(
+                f"📬 Pixel prefetch ignored from UA: {user_agent}, IP: {ip_address}"
+            )
             return HttpResponse(self.TRANSPARENT_PIXEL, content_type="image/png")
         try:
             email = Email.objects.get(id=email_id)
