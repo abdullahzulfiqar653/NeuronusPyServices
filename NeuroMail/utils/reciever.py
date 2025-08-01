@@ -3,13 +3,27 @@ from django.core.files.base import ContentFile
 
 from main.services.s3 import S3Service
 from NeuroMail.models.email import Email
-from NeuroMail.utils.imap_server import fetch_inbox_emails
+from NeuroMail.utils.imap_server import fetch_emails
 from NeuroMail.models.email_recipient import EmailRecipient
 from NeuroMail.models.email_attachment import EmailAttachment
 
 
+def get_saved_uids(mailbox, type):
+    return set(
+        imap_uid.encode()
+        for imap_uid in Email.objects.filter(
+            mailbox=mailbox, primary_email_type=type
+        ).values_list("imap_uid", flat=True)
+        if imap_uid is not None
+    )
+
+
 def get_recieved_emails(mailbox, user):
-    emails = fetch_inbox_emails(mailbox.email, mailbox.password)
+    inbox_uids = get_saved_uids(mailbox, Email.INBOX)
+    spam_uids = get_saved_uids(mailbox, Email.SPAM)
+    emails = fetch_emails(mailbox.email, mailbox.password, inbox_uids, Email.INBOX)
+    # spam_emails = fetch_emails(mailbox.email, mailbox.password, spam_uids, Email.SPAM)
+    print(spam_uids)
     new_emails = []
     recipients = []
     attachments = []
@@ -23,6 +37,7 @@ def get_recieved_emails(mailbox, user):
                 body=email["body"],
                 is_seen=email["is_seen"],
                 subject=email["subject"],
+                imap_uid=email["imap_uid"],
                 email_type=email["email_type"],
                 primary_email_type=email["email_type"],
             )

@@ -30,7 +30,7 @@ class MailboxEmailListCreateView(generics.ListCreateAPIView):
         email_type = self.request.query_params.get("email_type")
         if email_type == Email.INBOX:
             get_recieved_emails(mailbox, self.request.user)
-        return mailbox.emails.all().order_by("-created_at")
+        return mailbox.emails.filter(is_deleted=False).order_by("-created_at")
 
 
 class MailboxEmailRetrieveUpdateView(generics.RetrieveUpdateAPIView):
@@ -46,7 +46,7 @@ class MailboxEmailRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return MailBox.objects.none()
-        return self.request.mailbox.emails.all()
+        return self.request.mailbox.emails.filter(is_deleted=False)
 
 
 class MailboxEmailMoveToTrashView(generics.UpdateAPIView):
@@ -116,7 +116,7 @@ class MailboxEmailDeleteFromTrashView(generics.UpdateAPIView):
 
 
 class EmailFileRetrieveView(generics.RetrieveAPIView):
-    queryset = Email.objects.all()
+    queryset = Email.objects.filter(is_deleted=False)
     permission_classes = [IsEmailOwner]
     serializer_class = EmailAttachmentSerializer
 

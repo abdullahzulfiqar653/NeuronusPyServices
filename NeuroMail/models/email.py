@@ -1,6 +1,7 @@
 from django.db import models
-from main.models.abstract.base import BaseModel
+from django.db.models import Q
 from NeuroMail.models.mailbox import MailBox
+from main.models.abstract.base import BaseModel
 
 
 class Email(BaseModel):
@@ -9,12 +10,14 @@ class Email(BaseModel):
     SENT = "sent"
     DRAFT = "draft"
     TRASH = "trash"
+    SPAM = "spam"
 
     EMAIL_TYPE_CHOICES = [
         (SENT, "Sent"),
         (INBOX, "Inbox"),
         (DRAFT, "Draft"),
         (TRASH, "Trash"),
+        (SPAM, "Spam"),
     ]
 
     mailbox = models.ForeignKey(
@@ -34,6 +37,17 @@ class Email(BaseModel):
     is_read_by_recipient = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
     is_sent_success = models.BooleanField(default=False)
+    imap_uid = models.CharField(max_length=64, editable=False, null=True)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.subject} - {self.email_type} ({self.mailbox.email})"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["mailbox", "imap_uid", "primary_email_type"],
+                name="unique_mailbox_email_uid",
+                condition=Q(imap_uid__isnull=False),
+            )
+        ]

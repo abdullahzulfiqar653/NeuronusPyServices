@@ -16,20 +16,20 @@ def decode_mime_words(mime_words):
     return decoded_string
 
 
-def fetch_inbox_emails(username, password):
+def fetch_emails(username, password, saved_uids, type="inbox"):
     mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
     mail.login(username, password)
-    mail.select("inbox")  # Select the mailbox you want to check
+    mail.select(type)  # Select the mailbox you want to check
 
     # Search for unread emails
-    status, messages = mail.search(None, "UNSEEN")
-    email_ids = messages[0].split()
-
+    status, data = mail.uid("search", None, "ALL")
+    all_uids = set(data[0].split())
+    email_uids = all_uids - saved_uids
     email_list = []  # List to store email data
-
-    for e_id in email_ids:
-        res, msg_data = mail.fetch(e_id, "(RFC822)")
-        mail.store(e_id, "+FLAGS", "\\Seen")
+    # print(f"{all_uids} - {saved_uids} = email ids: {email_uids}")
+    for uid in email_uids:
+        res, msg_data = mail.fetch(uid, "(RFC822)")
+        mail.store(uid, "+FLAGS", "\\Seen")
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 msg = email.message_from_bytes(response_part[1])
@@ -101,6 +101,7 @@ def fetch_inbox_emails(username, password):
 
                 # Structuring the email data into a dictionary
                 email_data = {
+                    "imap_uid": uid.decode(),
                     "body": body,
                     "subject": subject,
                     "is_seen": False,  # since you're fetching unseen emails

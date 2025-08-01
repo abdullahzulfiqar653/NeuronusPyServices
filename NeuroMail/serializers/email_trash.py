@@ -5,7 +5,9 @@ from NeuroMail.models.email import Email
 
 class EmailTrashSerializer(serializers.Serializer):
     emails = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Email.objects.all(), pk_field=serializers.CharField()
+        many=True,
+        queryset=Email.objects.filter(is_deleted=False),
+        pk_field=serializers.CharField(),
     )
 
     def __init__(self, *args, **kwargs):
@@ -16,7 +18,7 @@ class EmailTrashSerializer(serializers.Serializer):
         request = self.context.get("request")
         if hasattr(request, "user") and request.user.is_authenticated:
             mailbox = self.context.get("mailbox")
-            self.fields["emails"].queryset = mailbox.emails.all()
+            self.fields["emails"].queryset = mailbox.emails.filter(is_deleted=False)
 
     def update_emails_to_trash(self):
         emails = self.validated_data["emails"]
@@ -45,5 +47,7 @@ class EmailTrashSerializer(serializers.Serializer):
 
     def update_trash_to_delete(self):
         emails = self.validated_data["emails"]
-        Email.objects.filter(id__in=[email.id for email in emails]).delete()
+        Email.objects.filter(id__in=[email.id for email in emails]).update(
+            is_deleted=True
+        )
         return emails
