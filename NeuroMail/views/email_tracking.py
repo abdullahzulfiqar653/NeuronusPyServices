@@ -29,11 +29,10 @@ class EmailTrackingPixelView(APIView):
     def get(self, request, email_id):
         try:
             email = Email.objects.get(id=email_id)
-
             # Only mark as read if 30 seconds have passed since the email was sent
             if not email.is_read_by_recipient:
                 time_elapsed = timezone.now() - email.updated_at
-                if time_elapsed.total_seconds() >= 10:
+                if time_elapsed.total_seconds() >= 12:
                     email.is_read_by_recipient = True
                     email.read_at = timezone.now()
                     email.save()
