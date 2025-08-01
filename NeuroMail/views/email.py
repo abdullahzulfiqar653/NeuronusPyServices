@@ -14,6 +14,9 @@ from main.services.s3 import S3Service
 from NeuroMail.permissions import IsMailBoxOwner, IsEmailOwner
 from NeuroMail.utils.reciever import get_recieved_emails
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
 
 class MailboxEmailListCreateView(generics.ListCreateAPIView):
     """THis API used to create emails of type [sent, draft] and use to list emails of all types"""
@@ -32,10 +35,65 @@ class MailboxEmailListCreateView(generics.ListCreateAPIView):
             get_recieved_emails(mailbox, self.request.user)
         return mailbox.emails.filter(is_deleted=False).order_by("-created_at")
 
+    @swagger_auto_schema(
+        operation_summary="List emails for mailbox",
+        operation_description=(
+            "Returns all emails belonging to the current mailbox.\n\n"
+            "Supports filters:\n"
+            "- `email_type`: inbox, sent, draft, trash, Junk\n"
+            "- `is_starred`: true/false\n"
+            "- `is_seen`: true/false\n"
+            "- `search`: keyword in subject or body"
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                "email_type",
+                openapi.IN_QUERY,
+                description="Filter by email type (inbox, sent, draft, trash, Junk)",
+                type=openapi.TYPE_STRING,
+                enum=[Email.INBOX, Email.SENT, Email.DRAFT, Email.TRASH, Email.SPAM],
+            ),
+            openapi.Parameter(
+                "is_starred",
+                openapi.IN_QUERY,
+                description="Filter by starred status",
+                type=openapi.TYPE_BOOLEAN,
+            ),
+            openapi.Parameter(
+                "is_seen",
+                openapi.IN_QUERY,
+                description="Filter by seen status",
+                type=openapi.TYPE_BOOLEAN,
+            ),
+            openapi.Parameter(
+                "search",
+                openapi.IN_QUERY,
+                description="Search in subject or body",
+                type=openapi.TYPE_STRING,
+            ),
+        ],
+        responses={200: EmailSerializer(many=True)},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Create an email (sent or draft)",
+        operation_description=(
+            "Creates a new email of type `sent` or `draft`.\n\n"
+            "**Rules for sent email:**\n"
+            "- Must have at least one recipient\n"
+            "- Must have a non-empty subject and body\n\n"
+            "Attachments and recipients must be sent as JSON/form-data."
+        ),
+        request_body=EmailSerializer,
+        responses={201: EmailSerializer()},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class MailboxEmailRetrieveUpdateView(generics.RetrieveUpdateAPIView):
-    """THis API use to fetch signle email data or to mark it as starred or seen"""
-
     permission_classes = [IsMailBoxOwner]
 
     def get_serializer_class(self):
@@ -48,13 +106,44 @@ class MailboxEmailRetrieveUpdateView(generics.RetrieveUpdateAPIView):
             return MailBox.objects.none()
         return self.request.mailbox.emails.filter(is_deleted=False)
 
+    @swagger_auto_schema(
+        operation_summary="Retrieve a single email",
+        operation_description=(
+            "Fetch details of a single email including subject, body, recipients, "
+            "attachments, and status fields like `is_seen`, `is_starred`, etc."
+        ),
+        responses={200: EmailSerializer()},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_summary="Update email status",
+        operation_description=(
+            "Update limited fields of an email — typically used to mark an email as "
+            "starred or seen.\n\n"
+            "**Allowed fields:**\n- `is_starred`\n- `is_seen`"
+        ),
+        request_body=EmailUpdateSerializer,
+        responses={200: EmailSerializer()},
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
 
 class MailboxEmailMoveToTrashView(generics.UpdateAPIView):
-    """APIs to move emails to trash by sending list of email ids"""
-
-    serializer_class = EmailTrashSerializer
     permission_classes = [IsMailBoxOwner]
+    serializer_class = EmailTrashSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Move emails to trash",
+        operation_description="Move one or more emails to trash by providing a list of email IDs.",
+        request_body=EmailTrashSerializer,
+        responses={
+            200: openapi.Response("Emails moved to trash successfully."),
+            400: "Invalid request or email IDs.",
+        },
+    )
     def update(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
@@ -71,11 +160,18 @@ class MailboxEmailMoveToTrashView(generics.UpdateAPIView):
 
 
 class MailboxEmailRestoreFromTrashView(generics.UpdateAPIView):
-    """APIs to restore emails from trash by sending list of email ids"""
-
-    serializer_class = EmailTrashSerializer
     permission_classes = [IsMailBoxOwner]
+    serializer_class = EmailTrashSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Restore emails from trash",
+        operation_description="Restore trashed emails back to their original type by providing a list of email IDs.",
+        request_body=EmailTrashSerializer,
+        responses={
+            200: openapi.Response("Emails restored from trash successfully."),
+            400: "Invalid request or email IDs.",
+        },
+    )
     def update(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
@@ -92,11 +188,18 @@ class MailboxEmailRestoreFromTrashView(generics.UpdateAPIView):
 
 
 class MailboxEmailDeleteFromTrashView(generics.UpdateAPIView):
-    """APIs to delete emails from trash by sending list of email ids"""
-
-    serializer_class = EmailTrashSerializer
     permission_classes = [IsMailBoxOwner]
+    serializer_class = EmailTrashSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Delete emails from trash",
+        operation_description="Permanently delete trashed emails by sending a list of email IDs.",
+        request_body=EmailTrashSerializer,
+        responses={
+            204: openapi.Response("Emails deleted successfully."),
+            400: "Unable to delete emails. Please try again.",
+        },
+    )
     def update(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
@@ -120,18 +223,32 @@ class EmailFileRetrieveView(generics.RetrieveAPIView):
     permission_classes = [IsEmailOwner]
     serializer_class = EmailAttachmentSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Get attachment download URL",
+        operation_description="Retrieve a presigned download URL for a specific email attachment using its ID.",
+        responses={
+            200: openapi.Response(
+                description="Presigned URL returned successfully.",
+                examples={
+                    "application/json": {
+                        "url": "https://s3.amazonaws.com/bucket-name/attachment-name?signature=xyz"
+                    }
+                },
+            ),
+            404: "Attachment not found.",
+        },
+    )
     def get(self, request, *args, **kwargs):
         attachment_id = kwargs["pk"]
-        """
-        Retrieve email attachments for a given email, generate presigned URLs for each.
-        """
         try:
             attachment = request.email.attachments.get(id=attachment_id)
         except:
             return Response(
                 {"detail": "Attachment not found."}, status=status.HTTP_404_NOT_FOUND
             )
+
         s3_client = S3Service()
         return Response(
-            {"url": s3_client.generate_presigned_url(attachment.s3_url)}, status=200
+            {"url": s3_client.generate_presigned_url(attachment.s3_url)},
+            status=status.HTTP_200_OK,
         )
