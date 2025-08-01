@@ -28,7 +28,7 @@ class MailboxEmailListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         mailbox = self.request.mailbox
         email_type = self.request.query_params.get("email_type")
-        if email_type == Email.INBOX:
+        if email_type in [Email.INBOX, Email.SPAM]:
             get_recieved_emails(mailbox, self.request.user)
         return mailbox.emails.filter(is_deleted=False).order_by("-created_at")
 

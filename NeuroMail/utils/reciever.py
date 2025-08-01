@@ -21,9 +21,11 @@ def get_saved_uids(mailbox, type):
 def get_recieved_emails(mailbox, user):
     inbox_uids = get_saved_uids(mailbox, Email.INBOX)
     spam_uids = get_saved_uids(mailbox, Email.SPAM)
-    emails = fetch_emails(mailbox.email, mailbox.password, inbox_uids, Email.INBOX)
-    # spam_emails = fetch_emails(mailbox.email, mailbox.password, spam_uids, Email.SPAM)
-    print(spam_uids)
+    inbox_emails = fetch_emails(
+        mailbox.email, mailbox.password, inbox_uids, Email.INBOX
+    )
+    spam_emails = fetch_emails(mailbox.email, mailbox.password, spam_uids, Email.SPAM)
+    emails = inbox_emails + spam_emails
     new_emails = []
     recipients = []
     attachments = []

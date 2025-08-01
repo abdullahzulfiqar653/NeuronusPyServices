@@ -26,7 +26,6 @@ def fetch_emails(username, password, saved_uids, type="inbox"):
     all_uids = set(data[0].split())
     email_uids = all_uids - saved_uids
     email_list = []  # List to store email data
-    # print(f"{all_uids} - {saved_uids} = email ids: {email_uids}")
     for uid in email_uids:
         res, msg_data = mail.fetch(uid, "(RFC822)")
         mail.store(uid, "+FLAGS", "\\Seen")
@@ -105,7 +104,7 @@ def fetch_emails(username, password, saved_uids, type="inbox"):
                     "body": body,
                     "subject": subject,
                     "is_seen": False,  # since you're fetching unseen emails
-                    "email_type": "inbox",
+                    "email_type": type,
                     "recipients": recipients,
                     "attachments": attachments,  # Attachments list
                 }

@@ -10,7 +10,7 @@ class Email(BaseModel):
     SENT = "sent"
     DRAFT = "draft"
     TRASH = "trash"
-    SPAM = "spam"
+    SPAM = "Junk"
 
     EMAIL_TYPE_CHOICES = [
         (SENT, "Sent"),
