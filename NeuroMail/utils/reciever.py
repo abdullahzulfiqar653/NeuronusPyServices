@@ -7,17 +7,24 @@ from NeuroMail.models.email_recipient import EmailRecipient
 from NeuroMail.models.email_attachment import EmailAttachment
 
 
-
 def get_recieved_emails(mailbox, user):
     saved_inbox_imap_ids = set(
-        Email.objects.filter(mailbox=mailbox, email_type=Email.INBOX).values_list("imap_id", flat=True)
+        Email.objects.filter(mailbox=mailbox, email_type=Email.INBOX).values_list(
+            "imap_id", flat=True
+        )
     )
     saved_spam_imap_ids = set(
-        Email.objects.filter(mailbox=mailbox, email_type=Email.SPAM).values_list("imap_id", flat=True)
+        Email.objects.filter(mailbox=mailbox, email_type=Email.SPAM).values_list(
+            "imap_id", flat=True
+        )
     )
 
-    inbox_emails = fetch_emails(mailbox.email, mailbox.password, saved_inbox_imap_ids, Email.INBOX)
-    spam_emails = fetch_emails(mailbox.email, mailbox.password, saved_spam_imap_ids, Email.SPAM)
+    inbox_emails = fetch_emails(
+        mailbox.email, mailbox.password, saved_inbox_imap_ids, Email.INBOX
+    )
+    spam_emails = fetch_emails(
+        mailbox.email, mailbox.password, saved_spam_imap_ids, Email.SPAM
+    )
     emails = inbox_emails + spam_emails
     new_emails = []
     recipients = []

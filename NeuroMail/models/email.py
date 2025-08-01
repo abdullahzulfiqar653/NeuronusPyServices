@@ -18,7 +18,7 @@ class Email(BaseModel):
         (INBOX, "Inbox"),
         (DRAFT, "Draft"),
         (TRASH, "Trash"),
-        (SPAM, "Spam")
+        (SPAM, "Spam"),
     ]
 
     mailbox = models.ForeignKey(
@@ -39,7 +39,6 @@ class Email(BaseModel):
     is_read_by_recipient = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
     is_sent_success = models.BooleanField(default=False)
-
 
     def __str__(self):
         return f"{self.subject} - {self.email_type} ({self.mailbox.email})"

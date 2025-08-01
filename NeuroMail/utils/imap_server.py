@@ -22,7 +22,7 @@ def fetch_emails(username, password, existing_imap_ids, email_type):
     mail.select(email_type)
 
     # Search for unread emails
-    status, messages = mail.search( None, "UNSEEN")
+    status, messages = mail.search(None, "UNSEEN")
     email_ids = messages[0].split()
     email_list = []  # List to store email data
     for e_id in email_ids:
@@ -31,10 +31,11 @@ def fetch_emails(username, password, existing_imap_ids, email_type):
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 msg = email.message_from_bytes(response_part[1])
-                imap_id = msg.get("Message-ID") or e_id.decode() # this is the unique email ID
+                imap_id = (
+                    msg.get("Message-ID") or e_id.decode()
+                )  # this is the unique email ID
                 if imap_id in existing_imap_ids:
-                 continue
-
+                    continue
 
                 subject = decode_mime_words(msg["Subject"])
                 from_email = decode_mime_words(msg.get("From", ""))
