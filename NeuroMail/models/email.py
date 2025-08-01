@@ -1,6 +1,9 @@
 from django.db import models
-from main.models.abstract.base import BaseModel
+import secrets
+from django.db.models import Q
 from NeuroMail.models.mailbox import MailBox
+from main.models.abstract.base import BaseModel
+
 
 class Email(BaseModel):
     UID_PREFIX = 120
@@ -33,6 +36,15 @@ class Email(BaseModel):
     is_starred = models.BooleanField(default=False)
     is_seen = models.BooleanField(default=False)
     total_size = models.BigIntegerField(default=0)
+    is_read_by_recipient = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    is_sent_success = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"{self.subject} - {self.email_type} ({self.mailbox.email})"
+
+    def save(self, *args, **kwargs):
+        if not self.imap_id:
+            self.imap_id = f"{secrets.token_hex(8)}"
+        super().save(*args, **kwargs)

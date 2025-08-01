@@ -17,6 +17,7 @@ from NeuroMail.views import (
     MailboxEmailRetrieveUpdateView,
     MailboxEmailDeleteFromTrashView,
     MailboxEmailRestoreFromTrashView,
+    EmailTrackingPixelView,
 )
 
 from main.views import (
@@ -109,6 +110,11 @@ urlpatterns = [
         "emails/ai/rephrase/",
         RephraseEmailCreateView.as_view(),
         name="rephrase-email-create",
+    ),
+    path(
+        "track/<str:email_id>/",
+        EmailTrackingPixelView.as_view(),
+        name="email-tracking-pixel",
     ),
     # =====================================================
     # Media
