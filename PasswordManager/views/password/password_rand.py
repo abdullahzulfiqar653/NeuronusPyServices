@@ -20,7 +20,6 @@ class RandomPasswordCreateView(generics.CreateAPIView):
             "- `is_uppercase`: only A-Z\n"
             "- `is_numeric`: only 0-9\n"
             "- `is_special`: special characters like !@#...\n\n"
-            "**Note:** You can combine multiple types."
         ),
         request_body=RandomPasswordCreateSerializer,
         responses={
