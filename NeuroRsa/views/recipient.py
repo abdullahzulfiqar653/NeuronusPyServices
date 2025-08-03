@@ -57,6 +57,15 @@ class RecipientRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Retrieve a recipient",
         operation_description="Fetch the details of a specific RSA recipient using its ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                "pk",
+                openapi.IN_PATH,
+                description="ID of the RSA recipient",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         responses={200: RecipientSerializer()},
     )
     def get(self, request, *args, **kwargs):
@@ -68,6 +77,15 @@ class RecipientRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             "Update the details of a recipient such as `name`, `public_key`, or `emoji`.\n\n"
             "**Note:** `name` must remain unique per user."
         ),
+        manual_parameters=[
+            openapi.Parameter(
+                "pk",
+                openapi.IN_PATH,
+                description="ID of the RSA recipient",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         request_body=RecipientSerializer,
         responses={200: RecipientSerializer()},
     )
@@ -77,6 +95,15 @@ class RecipientRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Delete a recipient",
         operation_description="Permanently delete a recipient using its ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                "pk",
+                openapi.IN_PATH,
+                description="ID of the RSA recipient",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         responses={204: "Recipient deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):

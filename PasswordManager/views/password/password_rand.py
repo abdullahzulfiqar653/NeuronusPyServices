@@ -10,18 +10,56 @@ class RandomPasswordCreateView(generics.CreateAPIView):
 
     @swagger_auto_schema(
         operation_summary="Generate a random password",
-        operation_description=(
-            "Generate a secure random password by specifying length and character preferences.\n\n"
-            "**At least one character type must be selected.**\n"
-            "**Minimum length must be 10.**\n\n"
-            "**Available character types:**\n"
-            "- `is_alphabets`: a mix of a-z and A-Z\n"
-            "- `is_lowercase`: only a-z\n"
-            "- `is_uppercase`: only A-Z\n"
-            "- `is_numeric`: only 0-9\n"
-            "- `is_special`: special characters like !@#...\n\n"
+        operation_description="""
+        Generate a secure random password by specifying length and character preferences.
+
+        **Constraints:**
+        - At least **one character type** must be selected.
+        - **Minimum length** must be **10**.
+
+        **Character type flags:**
+        - `is_alphabets`: A mix of lowercase and uppercase letters (a-zA-Z)
+        - `is_lowercase`: Only lowercase letters (a-z)
+        - `is_uppercase`: Only uppercase letters (A-Z)
+        - `is_numeric`: Numbers only (0-9)
+        - `is_special`: Special symbols (!@# etc.)
+        """,
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["length"],
+            properties={
+                "length": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="Length of the generated password (min: 10)",
+                    example=12,
+                ),
+                "is_alphabets": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Include both uppercase and lowercase alphabets",
+                    example=True,
+                ),
+                "is_lowercase": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Include only lowercase letters",
+                    example=False,
+                ),
+                "is_uppercase": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Include only uppercase letters",
+                    example=False,
+                ),
+                "is_numeric": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Include numeric characters (0-9)",
+                    example=True,
+                ),
+                "is_special": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Include special characters (!@#...)",
+                    example=True,
+                ),
+            },
         ),
-        request_body=RandomPasswordCreateSerializer,
         responses={
             201: openapi.Response(
                 description="Password generated successfully",
@@ -31,9 +69,16 @@ class RandomPasswordCreateView(generics.CreateAPIView):
                     }
                 },
             ),
-            400: "Validation error: length too short or no character type selected",
+            400: openapi.Response(
+                description="Validation error",
+                examples={
+                    "application/json": {
+                        "length": ["length must be 10 or greater"],
+                        "non_field_errors": ["At least one character type must be selected."]
+                    }
+                },
+            ),
         },
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-

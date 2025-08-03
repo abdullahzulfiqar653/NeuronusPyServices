@@ -61,6 +61,15 @@ class KeyPairRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Retrieve a key pair",
         operation_description="Get full details of a single key pair by ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                "pk",
+                openapi.IN_PATH,
+                description="ID of the key pair",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         responses={200: KeyPairSerializer()},
     )
     def get(self, request, *args, **kwargs):
@@ -69,6 +78,15 @@ class KeyPairRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Update a key pair",
         operation_description="Update fields like `name` or `email` of a specific key pair. Private/public keys are not modified.",
+        manual_parameters=[
+            openapi.Parameter(
+                "pk",
+                openapi.IN_PATH,
+                description="ID of the key pair",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         request_body=KeyPairSerializer,
         responses={200: KeyPairSerializer()},
     )
@@ -78,6 +96,15 @@ class KeyPairRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Delete a key pair",
         operation_description="Permanently delete a specific RSA key pair using its ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                "pk",
+                openapi.IN_PATH,
+                description="ID of the key pair",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         responses={204: "Key pair deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):
@@ -102,7 +129,7 @@ class MainKeyPairCreateView(generics.CreateAPIView):
                 examples={
                     "application/json": {
                         "public_key": "-----BEGIN PGP PUBLIC KEY BLOCK-----...",
-                        "private_key": "-----BEGIN PGP PRIVATE KEY BLOCK-----..."
+                        "private_key": "-----BEGIN PGP PRIVATE KEY BLOCK-----...",
                     }
                 },
             ),

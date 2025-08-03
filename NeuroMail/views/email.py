@@ -140,7 +140,7 @@ class MailboxEmailMoveToTrashView(generics.UpdateAPIView):
             400: "Invalid request or email IDs.",
         },
     )
-    def update(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
             data=request.data, context={"request": request, "mailbox": mailbox}
@@ -168,7 +168,7 @@ class MailboxEmailRestoreFromTrashView(generics.UpdateAPIView):
             400: "Invalid request or email IDs.",
         },
     )
-    def update(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
             data=request.data, context={"request": request, "mailbox": mailbox}
@@ -196,7 +196,7 @@ class MailboxEmailDeleteFromTrashView(generics.UpdateAPIView):
             400: "Unable to delete emails. Please try again.",
         },
     )
-    def update(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
             data=request.data, context={"request": request, "mailbox": mailbox}

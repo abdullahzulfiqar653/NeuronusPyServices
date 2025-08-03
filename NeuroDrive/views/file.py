@@ -228,18 +228,20 @@ class FileAccessView(generics.CreateAPIView):
         operation_description="""
         **Access a Password-Protected File**
 
-        - If a file is password-protected, you must provide the correct password to access it.
-        - This endpoint verifies the password and grants access if correct.
-
-        **Request Body:**
-        - **password** (required): The correct password for the file.
-
-        **Response:**
-        - If the password is correct, access is granted.
-        - If the password is incorrect, an error message is returned.
+        - Provide the correct password to access the file.
+        - Returns a presigned URL to download the file.
         """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the password-protected file",
+            )
+        ],
         request_body=FileAccessSerializer,
-        responses={200: "Access granted", 403: "Incorrect password"},
+        responses={200: FileAccessSerializer()},
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)

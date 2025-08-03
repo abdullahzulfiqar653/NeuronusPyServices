@@ -20,18 +20,30 @@ class RefreshTokenAPIView(generics.RetrieveAPIView):
     @swagger_auto_schema(
         operation_summary="Refresh access token",
         operation_description="""
-        **JWT Refresh Endpoint**
 
-        - Retrieves a new access token using a refresh token stored in an HTTP-only cookie (`neuro_refresh_token`).  
-        - Requires no request body.  
-        - Returns a fresh access token if the refresh token is valid.
+        This endpoint allows users to refresh their **access token** using the **refresh token**.
+    
+        **How It Works:**
+        - When a user logs in successfully, the `refresh_token` is stored in the browser’s **HTTP-only cookies**.
+
+        - To get a new **access token**, the client should send a `GET` request to this endpoint.
+
+        - If the request is from the **same origin** and includes the stored `refresh_token`, a new access token will be returned.
+    
+        **Request:**
+        - Requires a valid `refresh_token` stored in HTTP-only cookies.
+
+        **Response:**
+        - If successful, returns a new `access token`.
+        - If the refresh token is missing or invalid, an authentication error is raised.
+    
         """,
         responses={
             200: RefreshTokenSerializer,
             401: "Unauthorized — No or invalid refresh token in cookie.",
         },
     )
-    def retrieve(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("neuro_refresh_token")
 
         if not refresh_token:

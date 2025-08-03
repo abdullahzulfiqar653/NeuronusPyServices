@@ -35,7 +35,7 @@ class MailBoxExistenceCheckView(generics.CreateAPIView):
             400: "Invalid or already taken email.",
         },
     )
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

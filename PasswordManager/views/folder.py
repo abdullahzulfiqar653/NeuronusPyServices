@@ -20,8 +20,8 @@ class FolderListCreateView(generics.ListCreateAPIView):
         ),
         manual_parameters=[
             openapi.Parameter(
-                "search",
-                openapi.IN_QUERY,
+                name="search",
+                in_=openapi.IN_QUERY,
                 description="Search folders by title",
                 type=openapi.TYPE_STRING,
             ),
@@ -53,6 +53,15 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Retrieve a folder",
         operation_description="Fetch the details of a specific folder using its ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the folder",
+            ),
+        ],
         responses={200: FolderSerializer()},
     )
     def get(self, request, *args, **kwargs):
@@ -61,6 +70,15 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Update a folder",
         operation_description="Update the title of a specific folder.",
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the folder",
+            ),
+        ],
         request_body=FolderSerializer,
         responses={200: FolderSerializer()},
     )
@@ -70,6 +88,15 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Delete a folder",
         operation_description="Permanently delete a folder by ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the folder",
+            ),
+        ],
         responses={204: "Folder deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):

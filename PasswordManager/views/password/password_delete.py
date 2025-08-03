@@ -11,13 +11,21 @@ class BulkPasswordDeleteView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Bulk delete password entries",
         operation_description=(
-            "Delete multiple saved passwords by providing their IDs in a list.\n\n"
-            "**Example request:**\n"
-            "```json\n"
-            "{\n"
-            '  "passwords": [1, 2, 3]\n'
-            "}\n"
-            "```"
+            """
+            **Bulk Delete Passwords**
+
+            Allows deletion of multiple saved password entries by sending their IDs.
+
+            **Request Body Example:**
+            ```json
+            {
+              "passwords": [1, 2, 3]
+            }
+            ```
+
+            - Each ID must belong to a password saved by the currently authenticated user.
+            - Unauthorized or invalid IDs will be rejected.
+            """
         ),
         request_body=PasswordDeleteSerializer,
         responses={

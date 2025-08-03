@@ -17,23 +17,24 @@ class PasswordListCreateView(generics.ListCreateAPIView):
 
     @swagger_auto_schema(
         operation_summary="List all saved passwords",
-        operation_description=(
-            "Returns all password entries for the authenticated user.\n\n"
-            "Supports filters:\n"
-            "- `folder`: Filter by folder ID\n"
-            "- `search`: Search by title, username, url, notes, or emoji"
-        ),
+        operation_description="""
+    Returns all password entries for the authenticated user.
+
+    **Filters Supported:**
+    - `folder` — Filter by Folder ID.
+    - `search` — Search by title, username, URL, notes, or emoji.
+    """,
         manual_parameters=[
             openapi.Parameter(
-                "folder",
-                openapi.IN_QUERY,
-                description="Filter by folder ID",
+                name="folder",
+                in_=openapi.IN_QUERY,
+                description="Filter by Folder ID",
                 type=openapi.TYPE_INTEGER,
             ),
             openapi.Parameter(
-                "search",
-                openapi.IN_QUERY,
-                description="Search keyword in title, username, url, notes, or emoji",
+                name="search",
+                in_=openapi.IN_QUERY,
+                description="Search in title, username, URL, notes, or emoji",
                 type=openapi.TYPE_STRING,
             ),
         ],
