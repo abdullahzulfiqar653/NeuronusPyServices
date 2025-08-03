@@ -9,6 +9,7 @@ class UserSignUpView(generics.CreateAPIView):
     serializer_class = UserSignUpSerializer
 
     @swagger_auto_schema(
+        operation_summary="Create a new user with a unique passphrase",
         operation_description="""
         **User Sign-Up Endpoint**  
 

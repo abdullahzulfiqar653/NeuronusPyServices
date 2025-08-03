@@ -1,9 +1,10 @@
 from rest_framework import generics
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from main.serializers import RefreshTokenSerializer
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class RefreshTokenAPIView(generics.RetrieveAPIView):
@@ -16,6 +17,20 @@ class RefreshTokenAPIView(generics.RetrieveAPIView):
     permission_classes = []
     serializer_class = RefreshTokenSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Refresh access token",
+        operation_description="""
+        **JWT Refresh Endpoint**
+
+        - Retrieves a new access token using a refresh token stored in an HTTP-only cookie (`neuro_refresh_token`).  
+        - Requires no request body.  
+        - Returns a fresh access token if the refresh token is valid.
+        """,
+        responses={
+            200: RefreshTokenSerializer,
+            401: "Unauthorized — No or invalid refresh token in cookie.",
+        },
+    )
     def retrieve(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("neuro_refresh_token")
 

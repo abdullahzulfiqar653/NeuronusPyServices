@@ -30,6 +30,7 @@ class DirectoryListCreateView(generics.ListCreateAPIView):
         ).order_by("-created_at")
 
     @swagger_auto_schema(
+        operation_summary="List Directories",
         operation_description="""
         **Retrieve Directories**
 
@@ -45,6 +46,7 @@ class DirectoryListCreateView(generics.ListCreateAPIView):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        operation_summary="Create a New Directory",
         operation_description="""
         **Create a New Directory**
 
@@ -91,6 +93,7 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             instance.delete()
 
     @swagger_auto_schema(
+        operation_summary="Retrieve Directory Details",
         operation_description="""
         **Retrieve Directory Details**
 
@@ -103,6 +106,7 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        operation_summary="Update Directory Details",
         operation_description="""
         **Update Directory Details**
 
@@ -131,6 +135,7 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        operation_summary="Delete a Directory",
         operation_description="""
         **Delete a Directory**
 
@@ -170,24 +175,33 @@ class DirectoryFileListCreateView(generics.ListCreateAPIView):
         return self.request.directory.files.all().order_by("-created_at")
 
     @swagger_auto_schema(
+        operation_summary="List Files in a Directory",
         operation_description="""
-        **List Files in a Directory**
+    Retrieves all files present in a specified directory.
 
-        Retrieves all files present in a specified directory.
+    **Path Parameter:**
+    - `directory_id` – ID of the target directory.  
+      If `'shared'` is passed instead of an ID, returns all files shared with the authenticated user.
 
-        **Required Parameters:**
-        - `directory_id` (path parameter) - ID of the directory.\n
-        - if `shared` is passed as directory ID it will return all shared files.
-
-        **Response:**
-        - Returns a list of files with their details.
-        """,
+    **Response:**
+    - List of files in the specified directory (owned or shared).
+    """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="directory_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="Directory ID or `'shared'` to fetch shared files.",
+            )
+        ],
         responses={200: FileSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
+        operation_summary="Upload a File to a Directory",
         operation_description="""
         **Upload a File to a Directory**
 

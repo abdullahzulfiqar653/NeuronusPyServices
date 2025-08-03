@@ -1,17 +1,14 @@
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
-
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
-
 from main.services.s3 import S3Service
-
 from NeuroDrive.models.file import File
 from NeuroDrive.serializers.file import FileSerializer
 from NeuroDrive.models.shared_access import SharedAccess
 from NeuroDrive.permissions import IsFileOwner, IsDirectoryOwner
 from NeuroDrive.serializers.file_access import FileAccessSerializer
-
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 
@@ -65,7 +62,9 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return files
 
     @swagger_auto_schema(
-        operation_description="""
+        operation_summary="Retrieve File Details",
+        operation_description=(
+            """
     **Retrieve File Details**
     Users can retrieve the file if:
 
@@ -75,14 +74,26 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     **Important Notes:**
 
     - If the file is **password protected**, access will be denied.
-    """,
+    """
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the file (UUID or int)",
+            ),
+        ],
         responses={200: FileSerializer()},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="""
+        operation_summary="Update File Details",
+        operation_description=(
+            """
         **Update File Details**
         Requires *ownership* of the file.
 
@@ -105,7 +116,17 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
         - **Remove Password:**
         Set `is_remove_password=True` and send the current `password` field.
-        """,
+        """
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the file (UUID or int)",
+            ),
+        ],
         request_body=FileSerializer,
         responses={200: FileSerializer()},
     )
@@ -113,11 +134,23 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="""
+        operation_summary="Delete File",
+        operation_description=(
+            """
         **Delete File**
         - Only the **owner** of the file can delete it.
         - The file size will be **deducted** from the user's storage.
-        """,
+        """
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="ID of the file (UUID or int)",
+            ),
+        ],
         responses={204: "File deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):
@@ -135,7 +168,9 @@ class FileDirectoryUpdateView(generics.UpdateAPIView):
         return self.request.file
 
     @swagger_auto_schema(
-        operation_description="""
+        operation_summary="Update File Details",
+        operation_description=(
+            """
         **Update File Details**
         Requires *ownership* of the file.
 
@@ -158,7 +193,24 @@ class FileDirectoryUpdateView(generics.UpdateAPIView):
 
         - **Remove Password:**
           Set `is_remove_password=True` and send the current `password` field.
-        """,
+        """
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="directory_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="Directory ID",
+            ),
+            openapi.Parameter(
+                name="file_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="File ID inside the directory",
+            ),
+        ],
         request_body=FileSerializer,
         responses={200: FileSerializer()},
     )
@@ -172,6 +224,7 @@ class FileAccessView(generics.CreateAPIView):
     permission_classes = [IsFileOwner]
 
     @swagger_auto_schema(
+        operation_summary="Access Password-Protected File",
         operation_description="""
         **Access a Password-Protected File**
 

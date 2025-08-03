@@ -1,19 +1,15 @@
 from rest_framework.response import Response
 from rest_framework import generics, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
-
 from NeuroMail.models.email import Email
 from NeuroMail.models.mailbox import MailBox
-
 from NeuroMail.serializers.email import EmailSerializer
 from NeuroMail.serializers.email_trash import EmailTrashSerializer
 from NeuroMail.serializers.email_starred import EmailUpdateSerializer
 from NeuroMail.serializers.email_attachment import EmailAttachmentSerializer
-
 from main.services.s3 import S3Service
 from NeuroMail.permissions import IsMailBoxOwner, IsEmailOwner
 from NeuroMail.utils.reciever import get_recieved_emails
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 

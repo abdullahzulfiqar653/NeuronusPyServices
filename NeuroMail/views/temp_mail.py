@@ -19,28 +19,47 @@ HEADERS = {"x-rapidapi-key": API_KEY, "x-rapidapi-host": API_HOST}
 
 
 class TempMailRetrieveAPIView(generics.RetrieveAPIView):
+    """
+    Retrieve or regenerate a temporary email address and its inbox for the current user.
+    """
+
     serializer_class = TempEmailFakeSerializer
 
     @swagger_auto_schema(
+        operation_summary="Get or regenerate temporary email + inbox",
+        operation_description=(
+            "Returns a temporary email address for the authenticated user and its inbox.\n\n"
+            "**Query Param:**\n"
+            "- `is_change=true` → Generates a new email address\n\n"
+            "**Response:**\n"
+           " - `email`: temporary email address\n"
+            "- `inbox`: list of received emails via the RapidAPI integration"
+        ),
         manual_parameters=[
             openapi.Parameter(
                 name="is_change",
                 in_=openapi.IN_QUERY,
-                description="Set to `true` to generate a new email.",
+                description="Set to `true` to generate a new temporary email address.",
                 type=openapi.TYPE_BOOLEAN,
             )
-        ]
+        ],
+        responses={
+            200: TempEmailFakeSerializer(),
+            503: "API not available or quota exceeded",
+        },
     )
     def get(self, request, *args, **kwargs):
         is_change = request.query_params.get("is_change", "false")
         user = request.user
         temp_mail, created = TempMail.objects.get_or_create(user=user)
-        if created or is_change == "true":
+
+        if created or is_change.lower() == "true":
             temp_mail.email = self.generate_new_email()
             temp_mail.save()
 
         email = temp_mail.email
         emails = self.get_emails(email)
+
         return Response({"email": email, "inbox": emails})
 
     def generate_new_email(self):

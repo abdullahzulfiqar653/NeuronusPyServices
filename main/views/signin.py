@@ -9,11 +9,13 @@ class UserSignInView(generics.CreateAPIView):
     serializer_class = UserSignInSerializer
 
     @swagger_auto_schema(
+        operation_summary="User sign-in using seed",
         operation_description="""
         **User Sign-In Endpoint**  
 
-        - Accepts only a `pass-phrase` for authentication.  
-        - Generates and returns an authentication **token**.  
+        - Accepts only a `pass_phrase` (seed) for authentication.  
+        - If seed is valid, creates a user (if not already present).  
+        - Returns access and refresh JWT tokens along with user address.  
         """,
         request_body=UserSignInSerializer,
         responses={
