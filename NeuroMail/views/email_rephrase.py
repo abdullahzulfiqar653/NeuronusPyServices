@@ -14,7 +14,7 @@ class RephraseEmailCreateView(generics.CreateAPIView):
         operation_description=(
             "Rephrases the provided email body text using the selected AI tone template.\n\n"
             "**Inputs:**\n"
-            "- `email_text`: Original email content you want rephrased\n"
+            "- `email_text`: Original email content you want rephrased\n\n"
             "- `template`: ID of the AI tone template to use (e.g., Michelle Obama)\n\n"
             "**Returns:** Rephrased email content."
         ),

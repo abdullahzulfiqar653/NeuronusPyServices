@@ -65,16 +65,12 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         operation_summary="Retrieve File Details",
         operation_description=(
             """
-    **Retrieve File Details**
-    Users can retrieve the file if:
+        Retrieve a file if:
+        - You're the **owner**
+        - Or you have been granted **shared access**
 
-    - They are the **owner** of the file.
-    - They have **shared access** to the file.
-
-    **Important Notes:**
-
-    - If the file is **password protected**, access will be denied.
-    """
+        🔒 Password-protected files cannot be accessed unless unlocked via `/file/<id>/access/`
+        """
         ),
         manual_parameters=[
             openapi.Parameter(
@@ -82,8 +78,8 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
                 in_=openapi.IN_PATH,
                 type=openapi.TYPE_STRING,
                 required=True,
-                description="ID of the file (UUID or int)",
-            ),
+                description="File ID (UUID or int)",
+            )
         ],
         responses={200: FileSerializer()},
     )
@@ -224,13 +220,11 @@ class FileAccessView(generics.CreateAPIView):
     permission_classes = [IsFileOwner]
 
     @swagger_auto_schema(
-        operation_summary="Access Password-Protected File",
+        operation_summary="Unlock Password-Protected File",
         operation_description="""
-        **Access a Password-Protected File**
-
-        - Provide the correct password to access the file.
-        - Returns a presigned URL to download the file.
-        """,
+    🔐 Provide the correct password to unlock a password-protected file.
+    Returns a presigned URL for download if successful.
+    """,
         manual_parameters=[
             openapi.Parameter(
                 name="pk",
@@ -241,7 +235,7 @@ class FileAccessView(generics.CreateAPIView):
             )
         ],
         request_body=FileAccessSerializer,
-        responses={200: FileAccessSerializer()},
+        responses={200: "Access granted", 403: "Incorrect password"},
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)

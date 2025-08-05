@@ -8,21 +8,38 @@ class EncryptMessageView(generics.CreateAPIView):
     serializer_class = EncryptMessageSerializer
 
     @swagger_auto_schema(
-        operation_summary="Encrypt message with PGP for recipients",
+        operation_summary="Encrypt a message using recipients' PGP public keys",
         operation_description=(
-            "Encrypt a short message using the PGP public key of one or more recipients.\n\n"
+            "Encrypt a short message using the public keys of one or more RSA recipients.\n\n"
             "**Validation rules:**\n"
-            "- Message must not be empty\n"
-            "- Message must not exceed 446 characters\n"
-            "- At least one recipient ID must be provided\n\n"
-            "**Returns:** PGP encrypted message."
+            "- `message` must not be empty\n"
+            "- `message` must not exceed **446 characters**\n"
+            "- `recipient_ids` must contain **at least one recipient**\n\n"
+            "**Returns:** A PGP-formatted encrypted message block."
         ),
         request_body=EncryptMessageSerializer,
         responses={
             201: openapi.Response(
-                description="Message encrypted successfully.",
+                description="PGP message block returned successfully.",
+                examples={
+                    "application/json": {
+                        "message": (
+                            "-----BEGIN PGP MESSAGE BLOCK-----\n"
+                            "3a9fd...ab12f-ff8e9...332bc\n"
+                            "-----END PGP MESSAGE BLOCK-----"
+                        )
+                    }
+                },
             ),
-            400: "Validation error: empty message, too long, or no recipient selected.",
+            400: openapi.Response(
+                description="Validation error: Empty message, too long, or no recipients.",
+                examples={
+                    "application/json": {
+                        "message": ["Message content cannot be empty."],
+                        "recipient_ids": ["At least one Recipient required."],
+                    }
+                },
+            ),
         },
     )
     def post(self, request, *args, **kwargs):

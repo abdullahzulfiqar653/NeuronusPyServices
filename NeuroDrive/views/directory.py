@@ -80,11 +80,14 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         try:
             obj = super().get_object()
         except:
-            obj, _ = Directory.objects.get_or_create(owner=self.request.user, name="main")
+             # If the directory is not found, you could raise an error or create a default directory.
+            obj, _ = Directory.objects.get_or_create(
+                owner=self.request.user, name="main"
+            )
         return obj
 
     def perform_destroy(self, instance):
-        if instance.name != "main":
+        if not instance.name == "main":
             instance.delete()
 
     @swagger_auto_schema(

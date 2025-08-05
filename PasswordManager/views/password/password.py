@@ -17,28 +17,35 @@ class PasswordListCreateView(generics.ListCreateAPIView):
 
     @swagger_auto_schema(
         operation_summary="List all saved passwords",
-        operation_description="""
-    Returns all password entries for the authenticated user.
-
-    **Filters Supported:**
-    - `folder` — Filter by Folder ID.
-    - `search` — Search by title, username, URL, notes, or emoji.
-    """,
+        operation_description=(
+            "Retrieve all password entries saved by the authenticated user.\n\n"
+            "🔎 **Search Supported:**\n"
+            "- `search` parameter allows searching in title, username, URL, notes, and emoji.\n\n"
+            "🎯 **Filter Supported:**\n"
+            "- `folder`: Filter passwords by folder ID."
+        ),
         manual_parameters=[
             openapi.Parameter(
                 name="folder",
                 in_=openapi.IN_QUERY,
-                description="Filter by Folder ID",
+                description="Filter passwords by Folder ID",
                 type=openapi.TYPE_INTEGER,
+                required=False,
             ),
             openapi.Parameter(
                 name="search",
                 in_=openapi.IN_QUERY,
                 description="Search in title, username, URL, notes, or emoji",
                 type=openapi.TYPE_STRING,
+                required=False,
             ),
         ],
-        responses={200: PasswordSerializer(many=True)},
+        responses={
+            200: openapi.Response(
+                description="List of password entries",
+                schema=PasswordSerializer(many=True),
+            )
+        },
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -46,13 +53,19 @@ class PasswordListCreateView(generics.ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary="Create a new password entry",
         operation_description=(
-            "Creates a new password record associated with the authenticated user.\n\n"
-            "**Fields include:** title, url, username, password, folder, notes, emoji, and optional file attachment."
+            "Create a password record with title, credentials, and optional attachment.\n\n"
+            "📎 **Supported fields:**\n"
+            "- `title` (required, must be unique)\n"
+            "- `url`, `username`, `password`, `notes`, `emoji`\n"
+            "- `folder` (required: must belong to the user)\n"
+            "- `file` (optional file upload — e.g. PDF, image, document)"
         ),
         request_body=PasswordSerializer,
         responses={
-            201: PasswordSerializer(),
-            400: "Validation errors or bad request",
+            201: openapi.Response(
+                description="Password created successfully", schema=PasswordSerializer()
+            ),
+            400: openapi.Response(description="Validation errors or bad request"),
         },
     )
     def post(self, request, *args, **kwargs):
@@ -67,8 +80,25 @@ class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 
     @swagger_auto_schema(
         operation_summary="Retrieve a password entry",
-        operation_description="Fetch the details of a specific password entry using its ID.",
-        responses={200: PasswordSerializer()},
+        operation_description=(
+            "Fetch the full details of a single password entry using its ID.\n\n"
+            "Returns all saved fields including optional file metadata."
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                description="ID of the password entry",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Password entry details", schema=PasswordSerializer()
+            ),
+            404: openapi.Response(description="Password not found"),
+        },
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -76,19 +106,47 @@ class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Update a password entry",
         operation_description=(
-            "Update any fields of a saved password including file or folder.\n\n"
-            "**Note:** If no new file is uploaded, the old one is preserved."
+            "Update one or more fields of a password entry.\n\n"
+            "📌 You can send partial fields (`PATCH`).\n"
+            "📁 File field can be updated. If not sent, previous file remains."
         ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                description="ID of the password to update",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
         request_body=PasswordSerializer,
-        responses={200: PasswordSerializer()},
+        responses={
+            200: openapi.Response(
+                description="Password updated", schema=PasswordSerializer()
+            ),
+            400: openapi.Response(description="Validation error"),
+            404: openapi.Response(description="Password not found"),
+        },
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
     @swagger_auto_schema(
         operation_summary="Delete a password entry",
-        operation_description="Permanently delete a password entry using its ID.",
-        responses={204: "Password deleted successfully"},
+        operation_description="Permanently delete the password entry by ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                name="pk",
+                in_=openapi.IN_PATH,
+                description="ID of the password to delete",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
+        responses={
+            204: openapi.Response(description="Password deleted successfully"),
+            404: openapi.Response(description="Password not found"),
+        },
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)

@@ -15,7 +15,7 @@ class DecryptMessageView(generics.CreateAPIView):
             "- `message`: the encrypted PGP message block\n"
             "- `keypair_id`: ID of the keypair to use for decryption\n\n"
             "**Optional:**\n"
-            - "`passphrase`: Only needed if the keypair is passphrase-protected\n\n"
+             "`passphrase`: Only needed if the keypair is passphrase-protected\n\n"
             "**Returns:** The original decrypted message."
         ),
         request_body=DecryptMessageSerializer,

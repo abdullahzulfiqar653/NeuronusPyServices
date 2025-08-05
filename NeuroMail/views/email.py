@@ -36,9 +36,9 @@ class MailboxEmailListCreateView(generics.ListCreateAPIView):
         operation_description=(
             "Returns all emails belonging to the current mailbox.\n\n"
             "Supports filters:\n"
-            "- `email_type`: inbox, sent, draft, trash, Junk\n"
-            "- `is_starred`: true/false\n"
-            "- `is_seen`: true/false\n"
+            "- `email_type`: inbox, sent, draft, trash, Junk\n\n"
+            "- `is_starred`: true/false\n\n"
+            "- `is_seen`: true/false\n\n"
             "- `search`: keyword in subject or body"
         ),
         manual_parameters=[
@@ -74,17 +74,55 @@ class MailboxEmailListCreateView(generics.ListCreateAPIView):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_summary="Create an email (sent or draft)",
-        operation_description=(
-            "Creates a new email of type `sent` or `draft`.\n\n"
-            "**Rules for sent email:**\n"
-            "- Must have at least one recipient\n"
-            "- Must have a non-empty subject and body\n\n"
-            "Attachments and recipients must be sent as JSON/form-data."
+    operation_summary="Create an email (sent or draft)",
+    operation_description=(
+        "Creates a new email of type `sent` or `draft`.\n\n"
+        "**For `sent` emails:**\n"
+        "- Requires at least one recipient\n\n"
+        "- `subject` and `body` must be non-empty\n\n"
+        "- `attachments` and `recipients` must be passed as JSON (if stringified) or directly in multipart/form-data.\n\n"
+        "**Attachments will be uploaded to S3** and linked to the email.\n\n"
+        "**Note:** Tracking pixel is appended to body for sent emails."
+    ),
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["subject", "body", "email_type", "recipients"],
+        properties={
+            "subject": openapi.Schema(type=openapi.TYPE_STRING, example="Meeting Update"),
+            "body": openapi.Schema(type=openapi.TYPE_STRING, example="Dear team, the meeting is rescheduled..."),
+            "email_type": openapi.Schema(type=openapi.TYPE_STRING, enum=["sent", "draft"]),
+            "recipients": openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "email": openapi.Schema(type=openapi.TYPE_STRING, example="user@example.com"),
+                        "name": openapi.Schema(type=openapi.TYPE_STRING, example="John Doe"),
+                        "recipient_type": openapi.Schema(type=openapi.TYPE_STRING, enum=["to", "cc", "bcc"]),
+                    }
+                )
+            ),
+            "attachments": openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(type=openapi.TYPE_STRING, format="binary"),
+                description="Files uploaded as multipart/form-data."
+            ),
+        }
+    ),
+    responses={
+        201: EmailSerializer(),
+        400: openapi.Response(
+            description="Validation failed",
+            examples={
+                "application/json": {
+                    "recipients": ["At least one recipient is required."],
+                    "subject": ["The email subject cannot be empty."],
+                }
+            },
         ),
-        request_body=EmailSerializer,
-        responses={201: EmailSerializer()},
-    )
+    },
+)
+
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -118,7 +156,7 @@ class MailboxEmailRetrieveUpdateView(generics.RetrieveUpdateAPIView):
         operation_description=(
             "Update limited fields of an email — typically used to mark an email as "
             "starred or seen.\n\n"
-            "**Allowed fields:**\n- `is_starred`\n- `is_seen`"
+            "**Allowed fields:**\n- `is_starred`\n\n- `is_seen`"
         ),
         request_body=EmailUpdateSerializer,
         responses={200: EmailSerializer()},
