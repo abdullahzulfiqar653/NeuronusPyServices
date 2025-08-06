@@ -63,18 +63,16 @@ class RandomPasswordCreateView(generics.CreateAPIView):
         responses={
             201: openapi.Response(
                 description="Password generated successfully",
-                examples={
-                    "application/json": {
-                        "password": "8v!Gk#zL0m"
-                    }
-                },
+                examples={"application/json": {"password": "8v!Gk#zL0m"}},
             ),
             400: openapi.Response(
                 description="Validation error",
                 examples={
                     "application/json": {
                         "length": ["length must be 10 or greater"],
-                        "non_field_errors": ["At least one character type must be selected."]
+                        "non_field_errors": [
+                            "At least one character type must be selected."
+                        ],
                     }
                 },
             ),

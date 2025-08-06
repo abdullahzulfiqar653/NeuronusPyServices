@@ -53,9 +53,7 @@ class BulkPasswordDeleteView(generics.CreateAPIView):
             200: openapi.Response(
                 description="Passwords deleted successfully",
                 examples={
-                    "application/json": {
-                        "message": "Passwords deleted successfully"
-                    }
+                    "application/json": {"message": "Passwords deleted successfully"}
                 },
             ),
             400: openapi.Response(
@@ -69,7 +67,9 @@ class BulkPasswordDeleteView(generics.CreateAPIView):
         },
     )
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
 
         if serializer.is_valid():
             serializer.delete_passwords()

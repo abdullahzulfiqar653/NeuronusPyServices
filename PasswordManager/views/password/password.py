@@ -84,15 +84,6 @@ class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             "Fetch the full details of a single password entry using its ID.\n\n"
             "Returns all saved fields including optional file metadata."
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                description="ID of the password entry",
-                type=openapi.TYPE_STRING,
-                required=True,
-            )
-        ],
         responses={
             200: openapi.Response(
                 description="Password entry details", schema=PasswordSerializer()
@@ -110,15 +101,6 @@ class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             "📌 You can send partial fields (`PATCH`).\n"
             "📁 File field can be updated. If not sent, previous file remains."
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                description="ID of the password to update",
-                type=openapi.TYPE_STRING,
-                required=True,
-            )
-        ],
         request_body=PasswordSerializer,
         responses={
             200: openapi.Response(
@@ -134,15 +116,6 @@ class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Delete a password entry",
         operation_description="Permanently delete the password entry by ID.",
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                description="ID of the password to delete",
-                type=openapi.TYPE_STRING,
-                required=True,
-            )
-        ],
         responses={
             204: openapi.Response(description="Password deleted successfully"),
             404: openapi.Response(description="Password not found"),

@@ -25,13 +25,12 @@ class FolderListCreateView(generics.ListCreateAPIView):
                 in_=openapi.IN_QUERY,
                 description="Search folders by title (case-insensitive)",
                 type=openapi.TYPE_STRING,
-                required=False
+                required=False,
             ),
         ],
         responses={
             200: openapi.Response(
-                description="A list of folders",
-                schema=FolderSerializer(many=True)
+                description="A list of folders", schema=FolderSerializer(many=True)
             )
         },
     )
@@ -48,12 +47,11 @@ class FolderListCreateView(generics.ListCreateAPIView):
         request_body=FolderSerializer,
         responses={
             201: openapi.Response(
-                description="Folder created successfully",
-                schema=FolderSerializer()
+                description="Folder created successfully", schema=FolderSerializer()
             ),
             400: openapi.Response(
                 description="Validation error (e.g. missing or duplicate title)"
-            )
+            ),
         },
     )
     def post(self, request, *args, **kwargs):
@@ -69,21 +67,11 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Get folder by ID",
         operation_description="Retrieve details of a folder using its unique ID.",
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="Unique ID of the folder"
-            )
-        ],
         responses={
             200: openapi.Response(
-                description="Folder details",
-                schema=FolderSerializer()
+                description="Folder details", schema=FolderSerializer()
             ),
-            404: openapi.Response(description="Folder not found")
+            404: openapi.Response(description="Folder not found"),
         },
     )
     def get(self, request, *args, **kwargs):
@@ -96,23 +84,13 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             "You can send partial data using PATCH.\n"
             "Only the `title` field is accepted."
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="Unique ID of the folder to update"
-            )
-        ],
         request_body=FolderSerializer,
         responses={
             200: openapi.Response(
-                description="Folder updated",
-                schema=FolderSerializer()
+                description="Folder updated", schema=FolderSerializer()
             ),
             400: openapi.Response(description="Validation error"),
-            404: openapi.Response(description="Folder not found")
+            404: openapi.Response(description="Folder not found"),
         },
     )
     def patch(self, request, *args, **kwargs):
@@ -121,18 +99,9 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Delete folder",
         operation_description="Permanently delete a folder using its ID.",
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="Unique ID of the folder to delete"
-            )
-        ],
         responses={
             204: openapi.Response(description="Folder deleted successfully"),
-            404: openapi.Response(description="Folder not found")
+            404: openapi.Response(description="Folder not found"),
         },
     )
     def delete(self, request, *args, **kwargs):
