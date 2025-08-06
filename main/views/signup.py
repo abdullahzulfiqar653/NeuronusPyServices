@@ -12,17 +12,17 @@ class UserSignUpView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Create a new user with a unique passphrase (seed)",
         operation_description="""
-        This endpoint is used to create a new user by generating a secure and unique passphrase (seed).
+            This endpoint is used to create a new user by generating a secure and unique passphrase (seed).
 
-         **How it works**:
-        - Sends a `POST` request with no body.
-        - Generates a unique `pass_phrase` (seed) using internal logic.
-        - Sends the seed to Resonance API for registration and login.
-        - Stores the returned identity address in the user's profile.
-        - Returns the generated `pass_phrase`.
+            **How it works**:
+            - Sends a `POST` request with no body.
+            - Generates a unique `pass_phrase` (seed) using internal logic.
+            - Sends the seed to Resonance API for registration and login.
+            - Stores the returned identity address in the user's profile.
+            - Returns the generated `pass_phrase`.
 
-         If an error occurs during the external API call, it will return a 400 error.
-        """,
+             If an error occurs during the external API call, it will return a 400 error.
+            """,
         request_body=None,
         responses={
             201: openapi.Response(

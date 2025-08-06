@@ -18,10 +18,10 @@ class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
         operation_summary="Retrieve user profile",
         operation_description=(
             "Returns the authenticated user's profile details including:\n\n"
-            "- `id`: Unique profile ID\n"
-            "- `image`: Profile image URL\n"
-            "- `address`: User's address\n"
-            "- `features_data`: Additional data stored in profile\n"
+            "- `id`: Unique profile ID\n\n"
+            "- `image`: Profile image URL\n\n"
+            "- `address`: User's address\n\n"
+            "- `features_data`: Additional data stored in profile\n\n"
             "- `url`: Absolute URL to the profile"
         ),
         responses={
