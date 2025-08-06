@@ -72,15 +72,6 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         🔒 Password-protected files cannot be accessed unless unlocked via `/file/<id>/access/`
         """
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="File ID (UUID or int)",
-            )
-        ],
         responses={200: FileSerializer()},
     )
     def get(self, request, *args, **kwargs):
@@ -114,15 +105,6 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         Set `is_remove_password=True` and send the current `password` field.
         """
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="ID of the file (UUID or int)",
-            ),
-        ],
         request_body=FileSerializer,
         responses={200: FileSerializer()},
     )
@@ -138,15 +120,6 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         - The file size will be **deducted** from the user's storage.
         """
         ),
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="ID of the file (UUID or int)",
-            ),
-        ],
         responses={204: "File deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):
@@ -222,18 +195,9 @@ class FileAccessView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Unlock Password-Protected File",
         operation_description="""
-    🔐 Provide the correct password to unlock a password-protected file.
-    Returns a presigned URL for download if successful.
-    """,
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="ID of the password-protected file",
-            )
-        ],
+       🔐 Provide the correct password to unlock a password-protected file.
+       Returns a presigned URL for download if successful.
+       """,
         request_body=FileAccessSerializer,
         responses={200: "Access granted", 403: "Incorrect password"},
     )

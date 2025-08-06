@@ -80,7 +80,7 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         try:
             obj = super().get_object()
         except:
-             # If the directory is not found, you could raise an error or create a default directory.
+            # If the directory is not found, you could raise an error or create a default directory.
             obj, _ = Directory.objects.get_or_create(
                 owner=self.request.user, name="main"
             )
@@ -98,15 +98,6 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         - Fetches details of a specific directory.
         - The user must **own the directory**.
         """,
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="ID of the directory",
-            )
-        ],
         responses={200: DirectorySerializer()},
     )
     def get(self, request, *args, **kwargs):
@@ -124,15 +115,6 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         - `name`  - New name of the directory.
         - `parent`  - ID of the new parent directory (optional).
         """,
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="ID of the directory",
-            )
-        ],
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -157,15 +139,6 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
         - Only the **owner** of the directory can delete it.
         """,
-        manual_parameters=[
-            openapi.Parameter(
-                name="pk",
-                in_=openapi.IN_PATH,
-                type=openapi.TYPE_STRING,
-                required=True,
-                description="ID of the directory",
-            )
-        ],
         responses={204: "Directory deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):
@@ -185,7 +158,7 @@ class DirectoryFileListCreateView(generics.ListCreateAPIView):
         return [IsOwnerOrSharedDirectory()]
 
     def get_queryset(self):
-        directory_id = self.kwargs.get("directory_id") or self.kwargs.get("pk")
+        directory_id = self.kwargs.get("directory_id")
         user = self.request.user
         if directory_id == "shared":
             return File.objects.filter(
