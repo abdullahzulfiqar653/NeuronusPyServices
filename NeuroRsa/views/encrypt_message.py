@@ -12,8 +12,8 @@ class EncryptMessageView(generics.CreateAPIView):
         operation_description=(
             "Encrypt a short message using the public keys of one or more RSA recipients.\n\n"
             "**Validation rules:**\n"
-            "- `message` must not be empty\n"
-            "- `message` must not exceed **446 characters**\n"
+            "- `message` must not be empty\n\n"
+            "- `message` must not exceed **446 characters**\n\n"
             "- `recipient_ids` must contain **at least one recipient**\n\n"
             "**Returns:** A PGP-formatted encrypted message block."
         ),

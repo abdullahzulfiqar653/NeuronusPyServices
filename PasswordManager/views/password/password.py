@@ -55,9 +55,9 @@ class PasswordListCreateView(generics.ListCreateAPIView):
         operation_description=(
             "Create a password record with title, credentials, and optional attachment.\n\n"
             "📎 **Supported fields:**\n"
-            "- `title` (required, must be unique)\n"
-            "- `url`, `username`, `password`, `notes`, `emoji`\n"
-            "- `folder` (required: must belong to the user)\n"
+            "- `title` (required, must be unique)\n\n"
+            "- `url`, `username`, `password`, `notes`, `emoji`\n\n"
+            "- `folder` (required: must belong to the user)\n\n"
             "- `file` (optional file upload — e.g. PDF, image, document)"
         ),
         request_body=PasswordSerializer,

@@ -31,7 +31,7 @@ class UserSignUpView(generics.CreateAPIView):
                     "application/json": {
                         "pass_phrase": "yellow-sky-bird-frost"  # Example seed
                     }
-                }
+                },
             ),
             400: openapi.Response(
                 description="Bad request. Could not create user.",
@@ -39,7 +39,7 @@ class UserSignUpView(generics.CreateAPIView):
                     "application/json": {
                         "error": "Failed to create passphrase please refresh page"
                     }
-                }
+                },
             ),
         },
     )

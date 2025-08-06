@@ -34,21 +34,25 @@ class ProtectedMediaView(APIView):
     @swagger_auto_schema(
         operation_summary="Download protected media file",
         operation_description="""
-        Serve secured media files stored under protected paths (like attachments or drive files).  
-        Access is restricted to file owners or shared recipients.
+            Serve secured media files stored under protected paths (like attachments or drive files).  
+            Access is restricted to file owners or shared recipients.
 
-        **Path Parameters:**
-        - `file_type`:
-        - `mailbox-attachments`
-        - `password-attachments`
-        - `drive-attachments`
-        - `file_name`: Name of the file to download (must exactly match the saved filename).
+            **Path Parameters:**
+            - `file_type`:
 
-        **Responses:**
-        - `200`: File download response (as attachment).
-        - `403`: Forbidden – Access denied due to subscription or ownership.
-        - `404`: File not found or invalid file type.
-        """,
+            - `mailbox-attachments`
+
+            - `password-attachments`
+
+            - `drive-attachments`
+
+            - `file_name`: Name of the file to download (must exactly match the saved filename).
+
+            **Responses:**
+            - `200`: File download response (as attachment).\n
+            - `403`: Forbidden – Access denied due to subscription or ownership.\n
+            - `404`: File not found or invalid file type.
+            """,
         manual_parameters=[
             openapi.Parameter(
                 name="file_type",

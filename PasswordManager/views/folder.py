@@ -81,7 +81,7 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         operation_summary="Update folder",
         operation_description=(
             "Update the title of a folder.\n\n"
-            "You can send partial data using PATCH.\n"
+            "You can send partial data using PATCH.\n\n"
             "Only the `title` field is accepted."
         ),
         request_body=FolderSerializer,

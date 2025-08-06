@@ -11,19 +11,25 @@ class RandomPasswordCreateView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Generate a random password",
         operation_description="""
-        Generate a secure random password by specifying length and character preferences.
+            Generate a secure random password by specifying length and character preferences.
 
-        **Constraints:**
-        - At least **one character type** must be selected.
-        - **Minimum length** must be **10**.
+            **Constraints:**
+            - At least **one character type** must be selected.
+            - **Minimum length** must be **10**.
 
-        **Character type flags:**
-        - `is_alphabets`: A mix of lowercase and uppercase letters (a-zA-Z)
-        - `is_lowercase`: Only lowercase letters (a-z)
-        - `is_uppercase`: Only uppercase letters (A-Z)
-        - `is_numeric`: Numbers only (0-9)
-        - `is_special`: Special symbols (!@# etc.)
-        """,
+            
+            **Character type flags:**
+            - `is_alphabets`: A mix of lowercase and uppercase letters (a-zA-Z)
+
+            - `is_lowercase`: Only lowercase letters (a-z)
+
+            - `is_uppercase`: Only uppercase letters (A-Z)
+
+            - `is_numeric`: Numbers only (0-9)
+
+            - `is_special`: Special symbols (!@# etc.)
+            
+            """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=["length"],

@@ -11,43 +11,43 @@ class BulkPasswordDeleteView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Bulk delete password entries",
         operation_description="""
-        This endpoint allows an authenticated user to delete multiple saved passwords at once.
+            This endpoint allows an authenticated user to delete multiple saved passwords at once.
 
-         **Authentication Required**
+            **Authentication Required**
 
-        ###  Request Body
-        Provide a list of `password` IDs that you want to delete. These IDs **must belong to the current user**.
+            ###  Request Body
+            Provide a list of `password` IDs that you want to delete. These IDs **must belong to the current user**.
 
-        ```json
-        {
-          "passwords": [1, 5, 12]
-        }
-        ```
+            ```json
+            {
+              "passwords": [1, 5, 12]
+            }
+            ```
 
-        ###  Validation Rules
-        - Each password ID must belong to the authenticated user.
-        - If any password ID is invalid or unauthorized, the entire request will be rejected.
+            ###  Validation Rules
+            - Each password ID must belong to the authenticated user.
+            - If any password ID is invalid or unauthorized, the entire request will be rejected.
 
-        ###  URL Params
-        None — this endpoint expects only a POST request body.
+            ###  URL Params
+            None — this endpoint expects only a POST request body.
 
-        ###  Response Examples
-        - ✅ **Success**: All passwords deleted
-        ```json
-        {
-          "message": "Passwords deleted successfully"
-        }
-        ```
+            ###  Response Examples
+            - ✅ **Success**: All passwords deleted
+            ```json
+            {
+              "message": "Passwords deleted successfully"
+            }
+            ```
 
-        - ❌ **Error**: Invalid/unauthorized IDs
-        ```json
-        {
-          "passwords": [
-            "Invalid ID or password does not belong to the user."
-          ]
-        }
-        ```
-        """,
+            - ❌ **Error**: Invalid/unauthorized IDs
+            ```json
+            {
+              "passwords": [
+                "Invalid ID or password does not belong to the user."
+              ]
+            }
+            ```
+            """,
         request_body=PasswordDeleteSerializer,
         responses={
             200: openapi.Response(
