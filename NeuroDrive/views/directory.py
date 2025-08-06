@@ -31,14 +31,14 @@ class DirectoryListCreateView(generics.ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary="List Directories",
         operation_description="""
-        **Retrieve Directories**
+            **Retrieve Directories**
 
-        This endpoint retrieves all directories that:
-        - Are **owned** by the authenticated user.
+            This endpoint retrieves all directories that:
+            - Are **owned** by the authenticated user.
 
-        **Response:**
-        - A list of directories with their details.
-        """,
+            **Response:**
+            - A list of directories with their details.
+            """,
         responses={200: DirectorySerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
@@ -47,17 +47,17 @@ class DirectoryListCreateView(generics.ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary="Create a New Directory",
         operation_description="""
-        **Create a New Directory**
+            **Create a New Directory**
 
-        Allows the user to create a new directory.
+            Allows the user to create a new directory.
 
-        **Required Fields:**
-        - `name` (required) - Name of the new directory.
-        - `parent` (optional) - ID of the parent directory.
+            **Required Fields:**
+            - `name` (required) - Name of the new directory.\n
+            - `parent` (optional) - ID of the parent directory.
 
-        **Response:**
-        - Returns the newly created directory details.
-        """,
+            **Response:**
+            - Returns the newly created directory details.
+            """,
         request_body=DirectorySerializer,
         responses={201: DirectorySerializer()},
     )
@@ -93,11 +93,11 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Retrieve Directory Details",
         operation_description="""
-        **Retrieve Directory Details**
+            **Retrieve Directory Details**
 
-        - Fetches details of a specific directory.
-        - The user must **own the directory**.
-        """,
+            - Fetches details of a specific directory.
+            - The user must **own the directory**.
+            """,
         responses={200: DirectorySerializer()},
     )
     def get(self, request, *args, **kwargs):
@@ -106,15 +106,15 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Update Directory Details",
         operation_description="""
-        **Update Directory Details**
+            **Update Directory Details**
 
-        - Allows updating the **name** or **parent directory**.
-        - The user must be the **owner** of the directory.
+            - Allows updating the **name** or **parent directory**.
+            - The user must be the **owner** of the directory.
 
-        **Allowed Fields:**
-        - `name`  - New name of the directory.
-        - `parent`  - ID of the new parent directory (optional).
-        """,
+            **Allowed Fields:**
+            - `name`  - New name of the directory.\n
+            - `parent`  - ID of the new parent directory (optional).
+            """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -135,10 +135,10 @@ class DirectoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_summary="Delete a Directory",
         operation_description="""
-        **Delete a Directory**
+            **Delete a Directory**
 
-        - Only the **owner** of the directory can delete it.
-        """,
+            - Only the **owner** of the directory can delete it.
+            """,
         responses={204: "Directory deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):
@@ -171,19 +171,19 @@ class DirectoryFileListCreateView(generics.ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary="List Files in a Directory",
         operation_description="""
-        Retrieves all files present in a specified directory.
+            Retrieves all files present in a specified directory.
 
-        **Path Parameter:**
-        - `directory_id` – ID of the target directory.  
-          If `'shared'` is passed instead of an ID, returns all files shared with the authenticated user.
+            **Path Parameter:**
+            - `directory_id` – ID of the target directory. \n
+              If `'shared'` is passed instead of an ID, returns all files shared with the authenticated user.
 
-        **Query Parameters:**
-        - `search` - Search by file name.
-        - `is_starred` - Filter by starred files (true/false).
+            **Query Parameters:**
+            - `search` - Search by file name.\n
+            - `is_starred` - Filter by starred files (true/false).
 
-        **Response:**
-        - List of files in the specified directory (owned or shared).
-        """,
+            **Response:**
+            - List of files in the specified directory (owned or shared).
+            """,
         manual_parameters=[
             openapi.Parameter(
                 name="directory_id",
@@ -215,19 +215,19 @@ class DirectoryFileListCreateView(generics.ListCreateAPIView):
     @swagger_auto_schema(
         operation_summary="Upload a File to a Directory",
         operation_description="""
-        **Upload a File to a Directory**
+            **Upload a File to a Directory**
 
-        Allows users to upload a file into a specified directory.
+            Allows users to upload a file into a specified directory.
 
-        **Path Parameter:**
-        - `directory_id` (required) - ID of the directory where the file will be uploaded.
+            **Path Parameter:**
+            - `directory_id` (required) - ID of the directory where the file will be uploaded.
 
-        **Form Parameters:**
-        - `file` (required) - The file to be uploaded (PDF, image, etc.).
+            **Form Parameters:**
+            - `file` (required) - The file to be uploaded (PDF, image, etc.).
 
-        **Response:**
-        - Returns the uploaded file details.
-        """,
+            **Response:**
+            - Returns the uploaded file details.
+            """,
         manual_parameters=[
             openapi.Parameter(
                 name="directory_id",

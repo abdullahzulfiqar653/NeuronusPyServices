@@ -65,12 +65,12 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         operation_summary="Retrieve File Details",
         operation_description=(
             """
-        Retrieve a file if:
-        - You're the **owner**
-        - Or you have been granted **shared access**
+            Retrieve a file if:
+            - You're the **owner**
+            - Or you have been granted **shared access**
 
-        🔒 Password-protected files cannot be accessed unless unlocked via `/file/<id>/access/`
-        """
+            🔒 Password-protected files cannot be accessed unless unlocked via `/file/<id>/access/`
+            """
         ),
         responses={200: FileSerializer()},
     )
@@ -81,29 +81,29 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         operation_summary="Update File Details",
         operation_description=(
             """
-        **Update File Details**
-        Requires *ownership* of the file.
+            **Update File Details**
+            Requires *ownership* of the file.
 
-        **Supported Operations:**
+            **Supported Operations:**
 
-        - **Update Name:**
-        Send only the `name` field.
+            - **Update Name:**
+            Send only the `name` field.
 
-        - **Update Starred Status:**
-        Send only `is_starred` (True/False).
+            - **Update Starred Status:**
+            Send only `is_starred` (True/False).
 
-        - **Grant Permission:**
-        Set `is_giving_permission=True` and provide `user_address` to share access woth other user.
+            - **Grant Permission:**
+            Set `is_giving_permission=True` and provide `user_address` to share access woth other user.
 
-        - **Remove Metadata:**
-        Set `is_remove_metadata=True`, other fields should be `null`.
+            - **Remove Metadata:**
+            Set `is_remove_metadata=True`, other fields should be `null`.
 
-        - **Set Password:**
-        Send only the `password` field .
+            - **Set Password:**
+            Send only the `password` field .
 
-        - **Remove Password:**
-        Set `is_remove_password=True` and send the current `password` field.
-        """
+            - **Remove Password:**
+            Set `is_remove_password=True` and send the current `password` field.
+            """
         ),
         request_body=FileSerializer,
         responses={200: FileSerializer()},
@@ -115,10 +115,10 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         operation_summary="Delete File",
         operation_description=(
             """
-        **Delete File**
-        - Only the **owner** of the file can delete it.
-        - The file size will be **deducted** from the user's storage.
-        """
+            **Delete File**
+            - Only the **owner** of the file can delete it.
+            - The file size will be **deducted** from the user's storage.
+            """
         ),
         responses={204: "File deleted successfully"},
     )
@@ -140,29 +140,29 @@ class FileDirectoryUpdateView(generics.UpdateAPIView):
         operation_summary="Update File Details",
         operation_description=(
             """
-        **Update File Details**
-        Requires *ownership* of the file.
+            **Update File Details**
+            Requires *ownership* of the file.
 
-        **Supported Operations:**
+            **Supported Operations:**
 
-        - **Update Name:**
-          Send only the `name` field.
+            - **Update Name:**
+              Send only the `name` field.
 
-        - **Update Starred Status:**
-          Send only `is_starred` (True/False).
+            - **Update Starred Status:**
+              Send only `is_starred` (True/False).
 
-        - **Grant Permission:**
-          Set `is_giving_permission=True` and provide `user_address` to share access with another user.
+            - **Grant Permission:**
+              Set `is_giving_permission=True` and provide `user_address` to share access with another user.
 
-        - **Remove Metadata:**
-          Set `is_remove_metadata=True`, other fields should be `null`.
+            - **Remove Metadata:**
+              Set `is_remove_metadata=True`, other fields should be `null`.
+  
+            - **Set Password:**
+              Send only the `password` field.
 
-        - **Set Password:**
-          Send only the `password` field.
-
-        - **Remove Password:**
-          Set `is_remove_password=True` and send the current `password` field.
-        """
+            - **Remove Password:**
+              Set `is_remove_password=True` and send the current `password` field.
+            """
         ),
         manual_parameters=[
             openapi.Parameter(
@@ -195,9 +195,9 @@ class FileAccessView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Unlock Password-Protected File",
         operation_description="""
-       🔐 Provide the correct password to unlock a password-protected file.
-       Returns a presigned URL for download if successful.
-       """,
+           🔐 Provide the correct password to unlock a password-protected file.
+           Returns a presigned URL for download if successful.
+           """,
         request_body=FileAccessSerializer,
         responses={200: "Access granted", 403: "Incorrect password"},
     )
