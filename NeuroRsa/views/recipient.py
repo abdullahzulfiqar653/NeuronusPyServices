@@ -1,6 +1,7 @@
 from rest_framework import generics, filters
 from NeuroRsa.serializers.recipient import RecipientSerializer
 from drf_yasg.utils import swagger_auto_schema
+from NeuroRsa.models.recipient import Recipient
 from drf_yasg import openapi
 
 
@@ -52,6 +53,8 @@ class RecipientRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RecipientSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Recipient.objects.none()
         return self.request.user.recipients.all()
 
     @swagger_auto_schema(

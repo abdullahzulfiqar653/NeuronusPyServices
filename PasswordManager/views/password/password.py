@@ -1,7 +1,7 @@
 from rest_framework import generics, filters, status
 from django_filters.rest_framework import DjangoFilterBackend
 from PasswordManager.serializers.password import PasswordSerializer
-
+from PasswordManager.models.password import Password
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -76,6 +76,10 @@ class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PasswordSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return (
+                Password.objects.none()
+            )  # return empty QuerySet to avoid error during schema generation
         return self.request.user.passwords.all()
 
     @swagger_auto_schema(

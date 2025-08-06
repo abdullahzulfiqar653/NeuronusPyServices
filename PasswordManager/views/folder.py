@@ -1,5 +1,6 @@
 from rest_framework import generics, filters
 from PasswordManager.serializers.folder import FolderSerializer
+from PasswordManager.models.folder import Folder
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -10,6 +11,8 @@ class FolderListCreateView(generics.ListCreateAPIView):
     search_fields = ["title"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Folder.objects.none()  # Return empty queryset for schema generation
         return self.request.user.folders.all().order_by("-created_at")
 
     @swagger_auto_schema(
@@ -62,6 +65,8 @@ class FolderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FolderSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Folder.objects.none()
         return self.request.user.folders.all()
 
     @swagger_auto_schema(

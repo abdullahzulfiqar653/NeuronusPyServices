@@ -2,6 +2,7 @@ from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny
 from NeuroRsa.serializers.keypair import KeyPairSerializer, MainKeyPairSerializer
 from drf_yasg.utils import swagger_auto_schema
+from NeuroRsa.models.keypair import KeyPair
 from drf_yasg import openapi
 
 
@@ -63,6 +64,8 @@ class KeyPairRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = KeyPairSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return KeyPair.objects.none()
         return self.request.user.keypairs.all()
 
     @swagger_auto_schema(
