@@ -32,7 +32,7 @@ class TempMailRetrieveAPIView(generics.RetrieveAPIView):
             "**Query Param:**\n"
             "- `is_change=true` → Generates a new email address\n\n"
             "**Response:**\n"
-           " - `email`: temporary email address\n"
+            " - `email`: temporary email address\n"
             "- `inbox`: list of received emails via the RapidAPI integration"
         ),
         manual_parameters=[

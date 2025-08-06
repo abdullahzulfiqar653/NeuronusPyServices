@@ -6,8 +6,8 @@ from drf_yasg.utils import swagger_auto_schema
 
 class EmailAiTemplateListView(generics.ListAPIView):
     """
-    This API provides predefined AI tone templates 
-    (e.g., Donald Trump, Michelle Obama) that can be used 
+    This API provides predefined AI tone templates
+    (e.g., Donald Trump, Michelle Obama) that can be used
     to rephrase emails in the new email box UI.
     """
 

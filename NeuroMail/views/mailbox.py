@@ -30,7 +30,12 @@ class MailBoxExistenceCheckView(generics.CreateAPIView):
         responses={
             200: openapi.Response(
                 description="Email is available.",
-                examples={"application/json": {"available": True, "message": "MailBox is available to add."}},
+                examples={
+                    "application/json": {
+                        "available": True,
+                        "message": "MailBox is available to add.",
+                    }
+                },
             ),
             400: "Invalid or already taken email.",
         },
