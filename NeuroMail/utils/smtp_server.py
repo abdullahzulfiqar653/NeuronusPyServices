@@ -1,4 +1,5 @@
 import os
+import logging
 import smtplib
 import requests
 
@@ -11,6 +12,11 @@ from email.mime.application import MIMEApplication
 
 SMTP_SERVER = settings.MAIL_SERVER
 SMTP_PORT = 587  # Use 587 for TLS, 465 for SSL
+
+logging.basicConfig(
+    level=logging.INFO,  # Change to DEBUG for more details
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 
 def send_email(
@@ -86,10 +92,10 @@ def send_email(
 
         # Send the email to all recipients, including Bcc
         server.sendmail(from_email, all_emails, msg.as_string())
-        print(f"Email {email_id if email_id else ''} sent successfully!")
+        logging.info(f"Email {email_id if email_id else ''} sent successfully at")
         if email_id:
             Email.objects.filter(id=email_id).update(is_sent_success=True)
     except Exception as e:
-        print(f"Failed to send email with id {email_id if email_id else ''}: {e}")
+        logging.error(f"Failed to send email {email_id if email_id else ''} : {e}")
     finally:
         server.quit()
