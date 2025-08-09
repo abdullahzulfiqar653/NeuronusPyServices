@@ -5,7 +5,7 @@ import ssl
 import logging
 import time
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 import requests
 from django.conf import settings
@@ -16,33 +16,34 @@ from email.mime.application import MIMEApplication
 
 from NeuroMail.models.email import Email
 
-
 # --------------------------
-# Configuration
+# Config (override via Django settings if you want)
 # --------------------------
-SMTP_SERVER: str = settings.MAIL_SERVER  # e.g. "mail.scoolarc.com"
-SMTP_PORT: int = getattr(settings, "MAIL_PORT", 587)  # 587 (STARTTLS) or 465 (SSL)
-SMTP_TIMEOUT: int = getattr(settings, "MAIL_TIMEOUT", 15)  # seconds
-SMTP_RETRIES: int = getattr(settings, "MAIL_RETRIES", 3)
+SMTP_SERVER: str = getattr(settings, "MAIL_SERVER", "mail.scoolarc.com")
+# Ordered candidates: (port, mode) mode is "starttls" or "ssl"
+SMTP_CANDIDATES: List[Tuple[int, str]] = getattr(
+    settings,
+    "MAIL_PORT_CANDIDATES",
+    [(587, "starttls"), (465, "ssl"), (2525, "starttls")],
+)
+# Short timeouts so we fail fast and try next candidate
+SMTP_TIMEOUT_CONNECT: int = getattr(settings, "MAIL_TIMEOUT_CONNECT", 7)
+SMTP_TIMEOUT_OPS: int = getattr(settings, "MAIL_TIMEOUT_OPS", 15)
+SMTP_RETRIES_PER_CANDIDATE: int = getattr(settings, "MAIL_RETRIES_PER_CANDIDATE", 1)
 SMTP_BACKOFF_SECONDS: int = getattr(settings, "MAIL_BACKOFF_SECONDS", 2)
 ATTACH_TIMEOUT: int = getattr(settings, "MAIL_ATTACH_TIMEOUT", 30)
 
-# Logging
 logging.basicConfig(
     level=getattr(settings, "MAIL_LOG_LEVEL", logging.INFO),
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 
-# --------------------------
-# Helpers
-# --------------------------
-def _now_str() -> str:
+def _now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _get_ipv4(hostname: str) -> Optional[str]:
-    """Resolve hostname to first IPv4 address, or None if not found."""
     try:
         infos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
         for fam, *_rest, sockaddr in infos:
@@ -53,37 +54,37 @@ def _get_ipv4(hostname: str) -> Optional[str]:
     return None
 
 
-def _connect_ipv4_with_sni(hostname: str, port: int, timeout: int) -> smtplib.SMTP:
+def _connect_ipv4_preserve_sni(hostname: str, port: int, timeout: int) -> smtplib.SMTP:
     """
-    Connect TCP to an IPv4 address (to avoid AAAA/IPv6 timeouts) but keep the SMTP
-    object's _host as the original hostname so StartTLS uses correct SNI for cert validation.
+    Connect TCP to IPv4 to avoid possible IPv6 issues, but preserve the hostname
+    for SNI/cert validation during TLS handshake.
     """
     ipv4 = _get_ipv4(hostname)
     if not ipv4:
-        # Fall back to normal hostname connection (lets OS decide family)
         return smtplib.SMTP(hostname, port, timeout=timeout)
-
     server = smtplib.SMTP(timeout=timeout)
-    # Connect underlying TCP to the IPv4 address
-    server.connect(ipv4, port)
-    # Preserve/force hostname for TLS SNI/cert validation
-    server._host = hostname  # noqa: SLF001 (intentional internal attribute)
+    server.connect(ipv4, port)  # TCP connect to IPv4
+    server._host = hostname  # preserve hostname for SNI
     return server
 
 
-def _smtp_client(hostname: str, port: int, timeout: int) -> smtplib.SMTP:
+def _smtp_open(hostname: str, port: int, mode: str) -> smtplib.SMTP:
     """
-    Create an SMTP client:
-      - 465: implicit TLS (SMTP_SSL) using hostname (for SNI)
-      - others: connect via IPv4 when possible but keep hostname for SNI
+    Open an SMTP connection with short connect timeout.
+    mode: "starttls" (submission) or "ssl" (implicit TLS).
     """
-    if port == 465:
+    if mode == "ssl":
         context = ssl.create_default_context()
-        return smtplib.SMTP_SSL(hostname, port, timeout=timeout, context=context)
-    return _connect_ipv4_with_sni(hostname, port, timeout)
+        # SMTP_SSL takes its own timeout (connect+ops)
+        return smtplib.SMTP_SSL(
+            hostname, port, timeout=SMTP_TIMEOUT_CONNECT, context=context
+        )
+
+    # starttls path
+    return _connect_ipv4_preserve_sni(hostname, port, SMTP_TIMEOUT_CONNECT)
 
 
-def _collect_emails(recipients: List[Dict], kind: str) -> List[str]:
+def _collect(recipients: List[Dict], kind: str) -> List[str]:
     return [
         r.get("email")
         for r in recipients
@@ -91,9 +92,6 @@ def _collect_emails(recipients: List[Dict], kind: str) -> List[str]:
     ]
 
 
-# --------------------------
-# Public API
-# --------------------------
 def send_email(
     subject: str,
     body: str,
@@ -104,12 +102,8 @@ def send_email(
     email_id: Optional[str] = None,
 ) -> None:
     """
-    Send an email with subject/body/attachments via SMTP.
-
-    recipients: list of dicts:
-      [{"recipient_type": "to"|"cc"|"bcc", "email": "user@example.com"}, ...]
-
-    attachments: list of presigned file URLs (HTTP[S]) to fetch and attach.
+    recipients: [{"recipient_type": "to"|"cc"|"bcc", "email": "user@example.com"}, ...]
+    attachments: list of HTTP(S) URLs to fetch and attach.
     """
     attachments = attachments or []
 
@@ -118,19 +112,18 @@ def send_email(
     msg["From"] = from_email
     msg["Subject"] = subject
 
-    to_emails = _collect_emails(recipients, "to")
-    cc_emails = _collect_emails(recipients, "cc")
-    bcc_emails = _collect_emails(recipients, "bcc")
-    all_recipients = to_emails + cc_emails + bcc_emails
+    to_emails = _collect(recipients, "to")
+    cc_emails = _collect(recipients, "cc")
+    bcc_emails = _collect(recipients, "bcc")
+    all_rcpts = to_emails + cc_emails + bcc_emails
 
     msg["To"] = ", ".join(to_emails)
     msg["Cc"] = ", ".join(cc_emails)
 
-    # Attach body (plain fallback + HTML)
     msg.attach(MIMEText(body.strip(), "plain"))
     msg.attach(MIMEText(body, "html"))
 
-    # Fetch and attach files
+    # Attachments
     for url in attachments:
         try:
             resp = requests.get(url, timeout=ATTACH_TIMEOUT)
@@ -140,88 +133,88 @@ def send_email(
             part["Content-Disposition"] = f'attachment; filename="{filename}"'
             msg.attach(part)
         except Exception as e:
-            logging.error(f"Attachment fetch failed ({url}) at {_now_str()}: {e}")
+            logging.error(f"Attachment fetch failed ({url}) at {_now()}: {e}")
 
-    # Connect + send with retries
     last_err: Optional[Exception] = None
-    logging.info(
-        f"Connecting to SMTP {SMTP_SERVER}:{SMTP_PORT} (hostname SNI preserved)"
-    )
 
-    for attempt in range(1, SMTP_RETRIES + 1):
-        server: Optional[smtplib.SMTP] = None
-        try:
-            server = _smtp_client(SMTP_SERVER, SMTP_PORT, SMTP_TIMEOUT)
-            server.ehlo()
-
-            # STARTTLS for non-465 ports
-            if SMTP_PORT != 465:
-                context = ssl.create_default_context()
-                # starttls uses server._host (the hostname) for SNI/cert validation
-                server.starttls(context=context)
+    # Try candidate ports/modes in order
+    for port, mode in SMTP_CANDIDATES:
+        logging.info(f"Attempting SMTP {mode.upper()} on {SMTP_SERVER}:{port}")
+        for attempt in range(1, SMTP_RETRIES_PER_CANDIDATE + 1):
+            server: Optional[smtplib.SMTP] = None
+            try:
+                server = _smtp_open(SMTP_SERVER, port, mode)
                 server.ehlo()
 
-            server.login(from_email, password)
-            server.sendmail(from_email, all_recipients, msg.as_string())
+                if mode == "starttls":
+                    context = ssl.create_default_context()
+                    # Switch to operation timeout for subsequent ops
+                    server.timeout = SMTP_TIMEOUT_OPS
+                    server.starttls(context=context)  # SNI uses preserved hostname
+                    server.ehlo()
+                else:
+                    # SMTP_SSL already created; set op timeout
+                    try:
+                        server.sock.settimeout(SMTP_TIMEOUT_OPS)  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
 
-            logging.info(f"Email {email_id or ''} sent successfully at {_now_str()}")
-            if email_id:
-                Email.objects.filter(id=email_id).update(is_sent_success=True)
+                server.login(from_email, password)
+                server.sendmail(from_email, all_rcpts, msg.as_string())
 
-            try:
-                server.quit()
-            except Exception:
-                pass
-            return
+                logging.info(
+                    f"Email {email_id or ''} sent successfully at {_now()} via {mode.upper()} {port}"
+                )
+                if email_id:
+                    Email.objects.filter(id=email_id).update(is_sent_success=True)
 
-        except (socket.timeout, TimeoutError) as e:
-            last_err = e
-            logging.error(
-                f"[Attempt {attempt}/{SMTP_RETRIES}] SMTP timeout at {_now_str()}: {e}"
-            )
-
-        except smtplib.SMTPAuthenticationError as e:
-            # Wrong creds: no point retrying
-            logging.error(f"SMTP auth failed for {from_email} at {_now_str()}: {e}")
-            try:
-                if server:
+                try:
                     server.quit()
+                except Exception:
+                    pass
+                return
+
+            except (socket.timeout, TimeoutError) as e:
+                last_err = e
+                logging.error(
+                    f"[{mode.upper()} {port}] connect/IO timeout at {_now()}: {e}"
+                )
+
+            except ssl.SSLError as e:
+                last_err = e
+                logging.error(f"[{mode.upper()} {port}] TLS error at {_now()}: {e}")
+
+            except smtplib.SMTPAuthenticationError as e:
+                logging.error(
+                    f"[{mode.upper()} {port}] SMTP auth failed for {from_email} at {_now()}: {e}"
+                )
+                try:
+                    if server:
+                        server.quit()
+                finally:
+                    raise
+
+            except smtplib.SMTPException as e:
+                last_err = e
+                logging.error(f"[{mode.upper()} {port}] SMTP error at {_now()}: {e}")
+
+            except Exception as e:
+                last_err = e
+                logging.error(
+                    f"[{mode.upper()} {port}] Unexpected error at {_now()}: {e}"
+                )
+
             finally:
-                raise
+                try:
+                    if server:
+                        server.quit()
+                except Exception:
+                    pass
 
-        except ssl.SSLError as e:
-            # Certificate/SNI issues surface here
-            last_err = e
-            logging.error(
-                f"[Attempt {attempt}/{SMTP_RETRIES}] TLS/SSL error at {_now_str()}: {e}"
-            )
+            time.sleep(SMTP_BACKOFF_SECONDS * attempt)
 
-        except smtplib.SMTPException as e:
-            last_err = e
-            logging.error(
-                f"[Attempt {attempt}/{SMTP_RETRIES}] SMTP error at {_now_str()}: {e}"
-            )
+        logging.info(f"Moving to next candidate after {mode.upper()} {port}")
 
-        except Exception as e:
-            last_err = e
-            logging.error(
-                f"[Attempt {attempt}/{SMTP_RETRIES}] Unexpected error at {_now_str()}: {e}"
-            )
-
-        finally:
-            try:
-                if server:
-                    server.quit()
-            except Exception:
-                pass
-
-        # Backoff before next attempt
-        time.sleep(SMTP_BACKOFF_SECONDS * attempt)
-
-    # All retries failed
     raise RuntimeError(
-        f"Failed to send email {email_id or ''} after {SMTP_RETRIES} attempts at {_now_str()}: {last_err}"
+        f"Failed to send email {email_id or ''} via {SMTP_SERVER} after trying {SMTP_CANDIDATES} at {_now()}: {last_err}"
     )
-
-
-# COAT FRUIT TABLE UNDER JELLY OPERA CHALK HANDS CHALK JEEP NAME XEROX EIGHT AIM ZOOM ELEPHANT
