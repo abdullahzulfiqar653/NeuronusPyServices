@@ -86,10 +86,10 @@ def send_email(
 
         # Send the email to all recipients, including Bcc
         server.sendmail(from_email, all_emails, msg.as_string())
-        print("Email sent successfully!")
+        print(f"Email {email_id if email_id else ''} sent successfully!")
         if email_id:
             Email.objects.filter(id=email_id).update(is_sent_success=True)
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email with id {email_id if email_id else ''}: {e}")
     finally:
         server.quit()
