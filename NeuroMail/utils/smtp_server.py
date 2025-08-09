@@ -78,9 +78,9 @@ def send_email(
             except Exception as e:
                 print(f"Failed to attach file from URL {url}: {e}")
 
+    # Connect to the server
+    server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
     try:
-        # Connect to the server
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()  # Upgrade the connection to secure
         server.login(from_email, password)
 
