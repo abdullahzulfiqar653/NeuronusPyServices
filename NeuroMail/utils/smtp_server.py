@@ -20,13 +20,7 @@ logging.basicConfig(
 
 
 def send_email(
-    subject,
-    body,
-    from_email,
-    password,
-    recipients,
-    attachments=[],
-    email_id=None,
+    subject, body, from_email, password, recipients, attachments=[], email_id=None
 ):
     """
     Send an email with the given subject, body, and attachments.
