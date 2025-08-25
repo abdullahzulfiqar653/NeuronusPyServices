@@ -181,16 +181,7 @@ class MailboxEmailMoveToTrashView(generics.UpdateAPIView):
     permission_classes = [IsMailBoxOwner]
     serializer_class = EmailTrashSerializer
 
-    @swagger_auto_schema(
-        operation_summary="Move emails to trash",
-        operation_description="Move one or more emails to trash by providing a list of email IDs.",
-        request_body=EmailTrashSerializer,
-        responses={
-            200: openapi.Response("Emails moved to trash successfully."),
-            400: "Invalid request or email IDs.",
-        },
-    )
-    def patch(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
             data=request.data, context={"request": request, "mailbox": mailbox}
@@ -204,21 +195,24 @@ class MailboxEmailMoveToTrashView(generics.UpdateAPIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        operation_summary="Move emails to trash",
+        operation_description="Move one or more emails to trash by providing a list of email IDs.",
+        request_body=EmailTrashSerializer,
+        responses={
+            200: openapi.Response("Emails moved to trash successfully."),
+            400: "Invalid request or email IDs.",
+        },
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
 
 class MailboxEmailRestoreFromTrashView(generics.UpdateAPIView):
     permission_classes = [IsMailBoxOwner]
     serializer_class = EmailTrashSerializer
 
-    @swagger_auto_schema(
-        operation_summary="Restore emails from trash",
-        operation_description="Restore trashed emails back to their original type by providing a list of email IDs.",
-        request_body=EmailTrashSerializer,
-        responses={
-            200: openapi.Response("Emails restored from trash successfully."),
-            400: "Invalid request or email IDs.",
-        },
-    )
-    def patch(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
             data=request.data, context={"request": request, "mailbox": mailbox}
@@ -232,21 +226,24 @@ class MailboxEmailRestoreFromTrashView(generics.UpdateAPIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        operation_summary="Restore emails from trash",
+        operation_description="Restore trashed emails back to their original type by providing a list of email IDs.",
+        request_body=EmailTrashSerializer,
+        responses={
+            200: openapi.Response("Emails restored from trash successfully."),
+            400: "Invalid request or email IDs.",
+        },
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
 
 class MailboxEmailDeleteFromTrashView(generics.UpdateAPIView):
     permission_classes = [IsMailBoxOwner]
     serializer_class = EmailTrashSerializer
 
-    @swagger_auto_schema(
-        operation_summary="Delete emails from trash",
-        operation_description="Permanently delete trashed emails by sending a list of email IDs.",
-        request_body=EmailTrashSerializer,
-        responses={
-            204: openapi.Response("Emails deleted successfully."),
-            400: "Unable to delete emails. Please try again.",
-        },
-    )
-    def patch(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         mailbox = self.request.mailbox
         serializer = self.get_serializer(
             data=request.data, context={"request": request, "mailbox": mailbox}
@@ -262,6 +259,18 @@ class MailboxEmailDeleteFromTrashView(generics.UpdateAPIView):
             {"error": "unable to delete emails, please try again."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    @swagger_auto_schema(
+        operation_summary="Delete emails from trash",
+        operation_description="Permanently delete trashed emails by sending a list of email IDs.",
+        request_body=EmailTrashSerializer,
+        responses={
+            204: openapi.Response("Emails deleted successfully."),
+            400: "Unable to delete emails. Please try again.",
+        },
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
 
 
 class EmailFileRetrieveView(generics.RetrieveAPIView):
