@@ -237,6 +237,13 @@ class MailboxEmailDeleteFromTrashView(generics.UpdateAPIView):
     permission_classes = [IsMailBoxOwner]
     serializer_class = EmailTrashSerializer
 
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Email.objects.none()
+        return self.request.mailbox.emails.filter(
+            email_type=Email.TRASH, is_deleted=False
+        )
+
     @swagger_auto_schema(
         operation_summary="Delete emails from trash",
         operation_description="Permanently delete trashed emails by sending a list of email IDs.",
