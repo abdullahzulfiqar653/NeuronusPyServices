@@ -1,17 +1,14 @@
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
-
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
-
 from main.services.s3 import S3Service
-
 from NeuroDrive.models.file import File
 from NeuroDrive.serializers.file import FileSerializer
 from NeuroDrive.models.shared_access import SharedAccess
 from NeuroDrive.permissions import IsFileOwner, IsDirectoryOwner
 from NeuroDrive.serializers.file_access import FileAccessSerializer
-
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 
@@ -65,47 +62,49 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return files
 
     @swagger_auto_schema(
-        operation_description="""
-    **Retrieve File Details**
-    Users can retrieve the file if:
+        operation_summary="Retrieve File Details",
+        operation_description=(
+            """
+            Retrieve a file if:
+            - You're the **owner**
+            - Or you have been granted **shared access**
 
-    - They are the **owner** of the file.
-    - They have **shared access** to the file.
-
-    **Important Notes:**
-
-    - If the file is **password protected**, access will be denied.
-    """,
+            🔒 Password-protected files cannot be accessed unless unlocked via `/file/<id>/access/`
+            """
+        ),
         responses={200: FileSerializer()},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="""
-        **Update File Details**
-        Requires *ownership* of the file.
+        operation_summary="Update File Details",
+        operation_description=(
+            """
+            **Update File Details**
+            Requires *ownership* of the file.
 
-        **Supported Operations:**
+            **Supported Operations:**
 
-        - **Update Name:**
-        Send only the `name` field.
+            - **Update Name:**
+            Send only the `name` field.
 
-        - **Update Starred Status:**
-        Send only `is_starred` (True/False).
+            - **Update Starred Status:**
+            Send only `is_starred` (True/False).
 
-        - **Grant Permission:**
-        Set `is_giving_permission=True` and provide `user_address` to share access woth other user.
+            - **Grant Permission:**
+            Set `is_giving_permission=True` and provide `user_address` to share access woth other user.
 
-        - **Remove Metadata:**
-        Set `is_remove_metadata=True`, other fields should be `null`.
+            - **Remove Metadata:**
+            Set `is_remove_metadata=True`, other fields should be `null`.
 
-        - **Set Password:**
-        Send only the `password` field .
+            - **Set Password:**
+            Send only the `password` field .
 
-        - **Remove Password:**
-        Set `is_remove_password=True` and send the current `password` field.
-        """,
+            - **Remove Password:**
+            Set `is_remove_password=True` and send the current `password` field.
+            """
+        ),
         request_body=FileSerializer,
         responses={200: FileSerializer()},
     )
@@ -113,11 +112,14 @@ class FileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return super().put(request, *args, **kwargs)
 
     @swagger_auto_schema(
-        operation_description="""
-        **Delete File**
-        - Only the **owner** of the file can delete it.
-        - The file size will be **deducted** from the user's storage.
-        """,
+        operation_summary="Delete File",
+        operation_description=(
+            """
+            **Delete File**
+            - Only the **owner** of the file can delete it.
+            - The file size will be **deducted** from the user's storage.
+            """
+        ),
         responses={204: "File deleted successfully"},
     )
     def delete(self, request, *args, **kwargs):
@@ -135,30 +137,49 @@ class FileDirectoryUpdateView(generics.UpdateAPIView):
         return self.request.file
 
     @swagger_auto_schema(
-        operation_description="""
-        **Update File Details**
-        Requires *ownership* of the file.
+        operation_summary="Update File Details",
+        operation_description=(
+            """
+            **Update File Details**
+            Requires *ownership* of the file.
 
-        **Supported Operations:**
+            **Supported Operations:**
 
-        - **Update Name:**
-          Send only the `name` field.
+            - **Update Name:**
+              Send only the `name` field.
 
-        - **Update Starred Status:**
-          Send only `is_starred` (True/False).
+            - **Update Starred Status:**
+              Send only `is_starred` (True/False).
 
-        - **Grant Permission:**
-          Set `is_giving_permission=True` and provide `user_address` to share access with another user.
+            - **Grant Permission:**
+              Set `is_giving_permission=True` and provide `user_address` to share access with another user.
 
-        - **Remove Metadata:**
-          Set `is_remove_metadata=True`, other fields should be `null`.
+            - **Remove Metadata:**
+              Set `is_remove_metadata=True`, other fields should be `null`.
+  
+            - **Set Password:**
+              Send only the `password` field.
 
-        - **Set Password:**
-          Send only the `password` field.
-
-        - **Remove Password:**
-          Set `is_remove_password=True` and send the current `password` field.
-        """,
+            - **Remove Password:**
+              Set `is_remove_password=True` and send the current `password` field.
+            """
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                name="directory_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="Directory ID",
+            ),
+            openapi.Parameter(
+                name="file_id",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                required=True,
+                description="File ID inside the directory",
+            ),
+        ],
         request_body=FileSerializer,
         responses={200: FileSerializer()},
     )
@@ -172,19 +193,11 @@ class FileAccessView(generics.CreateAPIView):
     permission_classes = [IsFileOwner]
 
     @swagger_auto_schema(
+        operation_summary="Unlock Password-Protected File",
         operation_description="""
-        **Access a Password-Protected File**
-
-        - If a file is password-protected, you must provide the correct password to access it.
-        - This endpoint verifies the password and grants access if correct.
-
-        **Request Body:**
-        - **password** (required): The correct password for the file.
-
-        **Response:**
-        - If the password is correct, access is granted.
-        - If the password is incorrect, an error message is returned.
-        """,
+           🔐 Provide the correct password to unlock a password-protected file.
+           Returns a presigned URL for download if successful.
+           """,
         request_body=FileAccessSerializer,
         responses={200: "Access granted", 403: "Incorrect password"},
     )

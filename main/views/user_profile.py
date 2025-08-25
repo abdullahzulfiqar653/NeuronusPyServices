@@ -6,7 +6,6 @@ from main.serializers.user_profile import UserProfileSerializer
 
 
 class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
-
     serializer_class = UserProfileSerializer
 
     def get_object(self):
@@ -16,29 +15,18 @@ class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
             raise NotFound("User profile not found.")
 
     @swagger_auto_schema(
-        operation_description="""
-        **Retrieve User Profile Details**  
-
-        The following attributes will be returned when fetching the user profile:  
-
-        - **ID:**   
-        Unique identifier of the user profile.  
-
-        - **Image:**  
-        URL of the user's profile image.  
-
-        - **Address:**  
-        User's address (can be empty).  
-
-        - **Features Data:** 
-        Additional profile-related information.  
-
-        - **URL:**  
-        Direct link to the user's profile.  
-        """,
+        operation_summary="Retrieve user profile",
+        operation_description=(
+            "Returns the authenticated user's profile details including:\n\n"
+            "- `id`: Unique profile ID\n\n"
+            "- `image`: Profile image URL\n\n"
+            "- `address`: User's address\n\n"
+            "- `features_data`: Additional data stored in profile\n\n"
+            "- `url`: Absolute URL to the profile"
+        ),
         responses={
             200: UserProfileSerializer,
-            404: "**User profile** not found.",
+            404: "User profile not found.",
         },
     )
     def get(self, request, *args, **kwargs):
@@ -46,19 +34,17 @@ class UserProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
         return super().get(request, *args, **kwargs)
 
     @swagger_auto_schema(
-         operation_description="""
-                **Update User Profile**  
-
-                Users can update the following attribute:  
-
-                - **Image:** *(file, optional)*  
-                Upload a new profile image. The image will be stored on S3, and its URL will be generated.  
-                """,
+        operation_summary="Update user profile",
+        operation_description=(
+            "Allows users to update their profile.\n\n"
+            "**Fields that can be updated:**\n"
+            "- `image`: (optional) New profile image. Will be uploaded to S3 and stored via URL."
+        ),
         request_body=UserProfileSerializer,
         responses={
             200: "Profile updated successfully.",
-            400: "Invalid data provided.",
-            404: "**User profile** not found.",
+            400: "Invalid input data.",
+            404: "User profile not found.",
         },
     )
     def put(self, request, *args, **kwargs):

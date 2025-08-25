@@ -41,12 +41,12 @@ class FileDownloadAPIView(generics.CreateAPIView):
     @swagger_auto_schema(
         operation_summary="Download File",
         operation_description="""
-        Allows authenticated users to download a file from a given URL.
+            Allows authenticated users to download a file from a given URL.
         
-        - **URL (required):** The direct URL to the file to be downloaded.
+            - **URL (required):** The direct URL to the file to be downloaded.
         
-        - **Returns:** A downloadable file response.
-        """,
+            - **Returns:** A downloadable file response.
+            """,
         request_body=FileDownloadSerializer,
         responses={
             200: "File successfully downloaded.",

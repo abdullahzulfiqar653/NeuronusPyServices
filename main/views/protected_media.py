@@ -4,7 +4,8 @@ from django.conf import settings
 from rest_framework.views import APIView
 from django.core.files.storage import default_storage
 from django.http import FileResponse, Http404, HttpResponseForbidden
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from main.models.feature import Feature
 
 # Mapping for file types and their respective models and storage paths
@@ -30,6 +31,50 @@ class ProtectedMediaView(APIView):
     Checks if the user owns the media file and serves it.
     """
 
+    @swagger_auto_schema(
+        operation_summary="Download protected media file",
+        operation_description="""
+            Serve secured media files stored under protected paths (like attachments or drive files).  
+            Access is restricted to file owners or shared recipients.
+
+            **Path Parameters:**
+            - `file_type`:
+
+            - `mailbox-attachments`
+
+            - `password-attachments`
+
+            - `drive-attachments`
+
+            - `file_name`: Name of the file to download (must exactly match the saved filename).
+
+            **Responses:**
+            - `200`: File download response (as attachment).\n
+            - `403`: Forbidden – Access denied due to subscription or ownership.\n
+            - `404`: File not found or invalid file type.
+            """,
+        manual_parameters=[
+            openapi.Parameter(
+                name="file_type",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                description="Type of file (e.g., mailbox-attachments, password-attachments, drive-attachments)",
+                required=True,
+            ),
+            openapi.Parameter(
+                name="file_name",
+                in_=openapi.IN_PATH,
+                type=openapi.TYPE_STRING,
+                description="Exact file name to be downloaded",
+                required=True,
+            ),
+        ],
+        responses={
+            200: openapi.Response(description="File served successfully."),
+            403: "Forbidden. Upgrade required or no access to file.",
+            404: "Not found. File type invalid or file does not exist.",
+        },
+    )
     def get(self, request, file_type, file_name):
         SharedAccess = apps.get_model("NeuroDrive", "SharedAccess")
         file_type_data = FILE_MODEL_MAP.get(file_type)
