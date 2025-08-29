@@ -3,6 +3,8 @@ import mimetypes
 from PIL import Image
 from io import BytesIO
 from datetime import datetime
+import boto3
+from django.conf import settings
 
 
 def remove_pdf_metadata(pdf_file):
@@ -75,3 +77,4 @@ def get_file_metadata(file):
         metadata["executable"] = False
 
     return metadata
+

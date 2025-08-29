@@ -8,6 +8,8 @@ from NeuroDrive.views.file import (
     FileRetrieveUpdateDestroyView,
     FileAccessView,
 )
+from NeuroDrive.views.shared_link import (SharedLinkAccessAPIView, SharedLinkGenerateAPIView, SharedLinkSetPasswordAPIView)
+
 
 
 __all__ = [
@@ -17,4 +19,7 @@ __all__ = [
     "FileRetrieveUpdateDestroyView",
     "DirectoryRetrieveUpdateDestroyView",
     "FileAccessView",
+    "SharedLinkAccessAPIView",
+    "SharedLinkGenerateAPIView",
+    "SharedLinkSetPasswordAPIView"
 ]
