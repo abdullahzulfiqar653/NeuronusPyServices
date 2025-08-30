@@ -150,7 +150,7 @@ class SharedLinkAccessAPIView(APIView):
                 # Render password input template if incorrect or missing
                 return render(
                     request,
-                    "NeuroDrive/enter_password.html",
+                    "NeuroDrive/password_form.html",
                     {"key": obj.public_key, "error": "Incorrect password" if password else ""}
                 )
 

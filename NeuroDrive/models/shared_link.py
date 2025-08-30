@@ -4,7 +4,7 @@ import uuid
 from main.models.abstract.base import BaseModel
 
 class SharedLink(BaseModel):
-    file = models.FileField(upload_to='shared_link/')
+    UID_PREFIX = "SL_"  
     file_name = models.CharField(max_length=255)
     
     allowed_views = models.PositiveIntegerField(null=True, blank=True)

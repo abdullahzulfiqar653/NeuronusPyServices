@@ -24,6 +24,7 @@ MODEL_CODES = {
     "File": "150",
     "Directory": "151",
     "SharedAccess": "152",
+    "SharedLink": "153",
     #temp mail
     "TempMail": "155",
 }
