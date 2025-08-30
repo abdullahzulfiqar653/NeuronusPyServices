@@ -19,7 +19,6 @@ from NeuroDrive.views import (
     FileAccessView,
     SharedLinkAccessAPIView,
     SharedLinkGenerateAPIView,
-    SharedLinkSetPasswordAPIView,
 )
 
 urlpatterns = [
@@ -84,9 +83,12 @@ urlpatterns = [
     # =====================================================
     # Shared Links
     # =====================================================
-  # urls.py
-path("links/generate/", SharedLinkGenerateAPIView.as_view(), name="sharedlink-generate"),
-path("links/<slug:key>/", SharedLinkAccessAPIView.as_view(), name="sharedlink-access"),
-path("links/<slug:key>/set-password/", SharedLinkSetPasswordAPIView.as_view(), name="sharedlink-set-password"),
-
+    path(
+        "links/generate/",
+        SharedLinkGenerateAPIView.as_view(),
+        name="sharedlink-generate",
+    ),
+    path(
+        "links/<str:key>/", SharedLinkAccessAPIView.as_view(), name="sharedlink-access"
+    ),
 ]

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 import uuid
 from dateutil import parser
 from django.shortcuts import render
@@ -21,54 +21,55 @@ class SharedLinkGenerateAPIView(APIView):
     s3_service = S3Service()
 
     @swagger_auto_schema(
-    manual_parameters=[
-        openapi.Parameter(
-            name="file",
-            in_=openapi.IN_FORM,
-            type=openapi.TYPE_FILE,
-            required=True,
-            description="File to upload"
-        ),
-        openapi.Parameter(
-            name="allowed_views",
-            in_=openapi.IN_FORM,
-            type=openapi.TYPE_INTEGER
-        ),
-        openapi.Parameter(
-            name="ends_at",
-            in_=openapi.IN_FORM,
-            type=openapi.TYPE_STRING,
-            format="date-time"
-        ),
-        openapi.Parameter(
-            name="allowed_ip",
-            in_=openapi.IN_FORM,
-            type=openapi.TYPE_STRING
-        ),
-        openapi.Parameter(
-            name="set_password",
-            in_=openapi.IN_FORM,
-            type=openapi.TYPE_BOOLEAN,
-            description="Set True if you want to password protect link"
-        ),
-    ],
-    consumes=["multipart/form-data"],  # 👈 IMPORTANT
-    responses={
-        201: openapi.Response(
-            description="Public link created",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "public_key": openapi.Schema(type=openapi.TYPE_STRING),
-                    "url": openapi.Schema(type=openapi.TYPE_STRING),
-                },
+        manual_parameters=[
+            openapi.Parameter(
+                name="file",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                required=True,
+                description="File to upload"
             ),
-        )
-    }
-)
-
-
-
+            openapi.Parameter(
+                name="allowed_views",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_INTEGER,
+                required=False
+            ),
+            openapi.Parameter(
+                name="ends_at",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_STRING,
+                format="date-time",
+                required=False
+            ),
+            openapi.Parameter(
+                name="allowed_ip",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_STRING,
+                required=False
+            ),
+            openapi.Parameter(
+                name="password",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_STRING,
+                required=False,
+                description="Optional password to protect the file"
+            ),
+        ],
+        consumes=["multipart/form-data"],
+        responses={
+            201: openapi.Response(
+                description="Public link created",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "public_key": openapi.Schema(type=openapi.TYPE_STRING),
+                        "url": openapi.Schema(type=openapi.TYPE_STRING),
+                    },
+                ),
+            )
+        }
+    )
     def post(self, request, format=None):
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
@@ -77,7 +78,7 @@ class SharedLinkGenerateAPIView(APIView):
         allowed_views = request.data.get("allowed_views")
         ends_at = request.data.get("ends_at")
         allowed_ip = request.data.get("allowed_ip")
-        set_password = request.data.get("set_password", "false").lower() == "true"
+        password = request.data.get("password")  # optional
 
         if ends_at:
             try:
@@ -94,28 +95,27 @@ class SharedLinkGenerateAPIView(APIView):
             allowed_views=allowed_views,
             ends_at=ends_at,
             allowed_ip=allowed_ip,
-            public_key=uuid.uuid4().hex
+            public_key=uuid.uuid4().hex,
+            password=password if password else None
         )
 
-        # If user wants password → render set password form
-        if set_password:
-            return render(request, "NeuroDrive/set_password_form.html", {"key": shared_link.public_key})
-
-        # Otherwise return JSON
         return Response({
             "public_key": shared_link.public_key,
             "url": f"https://neurodrive.com/links/{shared_link.public_key}"
         }, status=status.HTTP_201_CREATED)
 
-class SharedLinkSetPasswordAPIView(APIView):
+
+class SharedLinkAccessAPIView(APIView):
     permission_classes = [AllowAny]
+    s3_service = S3Service()
 
     @swagger_auto_schema(
-        operation_description="Set a password for an existing shared link",
-        request_body=SharedLinkPasswordSerializer,
+        manual_parameters=[
+            openapi.Parameter('password', openapi.IN_QUERY, type=openapi.TYPE_STRING, required=False),
+        ],
         responses={
             200: openapi.Response(
-                description="Password set successfully",
+                description="Presigned URL",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
@@ -123,61 +123,16 @@ class SharedLinkSetPasswordAPIView(APIView):
                     },
                 ),
             ),
-            400: "Password mismatch / bad request"
+            403: "Password incorrect",
+            404: "Link not found or expired",
         }
     )
-    def post(self, request, key):
-        try:
-            obj = SharedLink.objects.get(public_key=key)
-        except SharedLink.DoesNotExist:
-            raise Http404("Link not found")
-
-        serializer = SharedLinkPasswordSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        password = serializer.validated_data["password"]
-        obj.password = password
-        obj.save()
-
-        return Response(
-            {"url": f"https://neurodrive.com/links/{obj.public_key}?password={password}"},
-            status=status.HTTP_200_OK
-        )
-
-class SharedLinkAccessAPIView(APIView):
-
-    permission_classes = [AllowAny] 
-    s3_service = S3Service()
-
-
-    @swagger_auto_schema(
-    manual_parameters=[
-        openapi.Parameter('password', openapi.IN_QUERY, type=openapi.TYPE_STRING),
-    ],
-    responses={
-        200: openapi.Response(
-            description="Presigned URL",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "url": openapi.Schema(type=openapi.TYPE_STRING),
-                },
-            ),
-        ),
-        403: "Password incorrect",
-        404: "Link not found or expired",
-    }
-)
-
     def get(self, request, key, format=None):
-        # Fetch object
         try:
             obj = SharedLink.objects.get(public_key=key)
         except SharedLink.DoesNotExist:
             raise Http404("Link not found")
 
-        # Get client IP
         ip = request.META.get('REMOTE_ADDR')
         password = request.GET.get('password')
 
@@ -188,10 +143,18 @@ class SharedLinkAccessAPIView(APIView):
             raise Http404("View limit reached")
         if obj.allowed_ip and obj.allowed_ip != ip:
             raise Http404("IP restricted")
-        if obj.password and password != obj.password:
-            return Response({"detail": "Password incorrect"}, status=status.HTTP_403_FORBIDDEN)
 
-        # Increment views
+        # Password check
+        if obj.password:
+            if password != obj.password:
+                # Render password input template if incorrect or missing
+                return render(
+                    request,
+                    "NeuroDrive/enter_password.html",
+                    {"key": obj.public_key, "error": "Incorrect password" if password else ""}
+                )
+
+        # Increment views after successful access
         obj.increment_views()
 
         # Generate presigned URL

@@ -1,8 +1,9 @@
 from django.db import models
 from django.utils import timezone
 import uuid
+from main.models.abstract.base import BaseModel
 
-class SharedLink(models.Model):
+class SharedLink(BaseModel):
     file = models.FileField(upload_to='shared_link/')
     file_name = models.CharField(max_length=255)
     
@@ -13,7 +14,6 @@ class SharedLink(models.Model):
     allowed_ip = models.GenericIPAddressField(null=True, blank=True)
     s3_url = models.CharField(max_length=256)
     public_key = models.CharField(max_length=45, unique=True, default=uuid.uuid4().hex)
-    created_at = models.DateTimeField(auto_now_add=True)
     
     def is_expired(self):
         return self.ends_at and timezone.now() > self.ends_at
