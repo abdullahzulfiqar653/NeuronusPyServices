@@ -19,10 +19,11 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 HOST_CONFIG = {
     "DEV": {
-        "default": "dev.neuroadmin.azlogics.dev",
         "NeuroRsa": "dev.api.neurorsa.xyz",
         "NeuroDrive": "dev.api.neurodrive.me",
         "NeuroMail": "dev.api.neuromail.space",
+        "default": "dev.neuroadmin.azlogics.dev",
+        "GhostTransfer": "dev.api.ghosttransfer.tech",
         "PasswordManager": "dev.api.neuropassword.com",
     },
     "LIVE": {
@@ -30,6 +31,7 @@ HOST_CONFIG = {
         "NeuroRsa": "live.api.neurorsa.xyz",
         "NeuroMail": "live.api.neuromail.space",
         "NeuroDrive": "live.api.neurodrive.com",
+        "GhostTransfer": "live.api.ghosttransfer.tech",
         "PasswordManager": "live.api.neuropassword.com",
     },
     "LOCAL": {
