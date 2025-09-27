@@ -19,11 +19,12 @@ class S3Service:
         key = parsed_url.path.lstrip("/")
         return bucket, key
 
-    def upload_file(self, file_obj, s3_key):
+    def upload_file(self, file_obj, s3_key, is_public=True):
         """
         Uploads a file directly from an HTTP request to a specific folder in DigitalOcean Spaces.
         :param file_obj: The file object from the HTTP request (e.g., request.FILES['file'])
         :param s3_key: The unique file name in the space
+        :param is_public: Whether the file is public or private
         :return: The presigned URL for the uploaded file
         """
         try:

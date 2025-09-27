@@ -1,22 +1,21 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenVerifyView
-
 from main.views.download_file import FileDownloadAPIView
+from rest_framework_simplejwt.views import TokenVerifyView
 
 
 from main.views import (
     UserSignInView,
     UserSignUpView,
-    UserProfileRetrieveUpdateView,
     RefreshTokenAPIView,
+    UserProfileRetrieveUpdateView,
 )
 from NeuroDrive.views import (
-    DirectoryFileListCreateView,
+    FileAccessView,
     FileDirectoryUpdateView,
     DirectoryListCreateView,
+    DirectoryFileListCreateView,
     FileRetrieveUpdateDestroyView,
     DirectoryRetrieveUpdateDestroyView,
-    FileAccessView,
 )
 
 urlpatterns = [

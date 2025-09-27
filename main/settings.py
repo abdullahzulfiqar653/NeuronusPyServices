@@ -38,6 +38,7 @@ HOST_CONFIG = {
         "NeuroDrive": "drive",
         "default": "localhost",
         "PasswordManager": "pm",
+        "GhostTransfer": "ghost",
     },
 }
 
@@ -84,6 +85,7 @@ INSTALLED_APPS = [
     "NeuroRsa",
     "NeuroMail",
     "NeuroDrive",
+    "GhostTransfer",
     "PasswordManager",
 ]
 

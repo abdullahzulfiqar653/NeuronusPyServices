@@ -12,6 +12,9 @@ host_patterns = patterns(
     host(rf"{ACTIVE_HOSTS['NeuroMail']}", "NeuroMail.urls", name="NeuroMail"),
     host(rf"{ACTIVE_HOSTS['NeuroDrive']}", "NeuroDrive.urls", name="NeuroDrive"),
     host(
+        rf"{ACTIVE_HOSTS['GhostTransfer']}", "GhostTransfer.urls", name="GhostTransfer"
+    ),
+    host(
         rf"{ACTIVE_HOSTS['PasswordManager']}",
         "PasswordManager.urls",
         name="PasswordManager",
