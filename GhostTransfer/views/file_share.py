@@ -94,7 +94,6 @@ class FileShareAccessView(APIView):
     Access a shared file with optional password, IP, view count, and expiry restrictions.
     """
 
-    template_limit = "limit.html"
     template_files = "files.html"
     template_expired = "expired.html"
     template_password = "password.html"
@@ -128,15 +127,31 @@ class FileShareAccessView(APIView):
         # Check IP restriction
         client_ip = self.get_client_ip(request)
         if share.allowed_ip and share.allowed_ip != client_ip:
-            return HttpResponseForbidden("Access denied from this IP.")
+            return render(
+                request,
+                self.template_expired,
+                {"message": "Access from this IP is not allowed."},
+            )
 
         # Check expiry
         if share.is_expired():
-            return render(request, self.template_expired)
+            return render(
+                request,
+                self.template_expired,
+                {
+                    "message": "The Link has expired. Request the owner to generate new link."
+                },
+            )
 
         # Check views
         if share.max_views and share.views_used >= share.max_views:
-            return render(request, self.template_limit)
+            return render(
+                request,
+                self.template_expired,
+                {
+                    "message": "Views Limit Exceeded. Request the owner to generate new link."
+                },
+            )
 
         # Password check
         if share.password_hash:
