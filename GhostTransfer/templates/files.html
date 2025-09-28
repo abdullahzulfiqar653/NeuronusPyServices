@@ -1,14 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Download Files</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Secret Message</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      function isImage(fileName) {
+        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("[data-file]").forEach((card) => {
+          const fileUrl = card.dataset.file;
+          const fileName = card.dataset.name;
+          const preview = card.querySelector(".file-preview");
+
+          if (isImage(fileName)) {
+            preview.innerHTML = `<img src="${fileUrl}" alt="preview" class="w-full h-60 object-cover"/>`;
+          } else {
+            preview.innerHTML = `
+          <div class="w-full h-60 flex items-center justify-center bg-[#111] text-gray-400">
+            <img src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png"
+                 alt="file"
+                 class="w-40 h-40 opacity-80"/>
+          </div>
+        `;
+          }
+        });
+      });
+    </script>
   </head>
-  <body>
-    <h2>Available Files</h2>
-    <ul>
-      {% for file in files %}
-      <li><a href="{{ file }}" target="_blank">Download</a></li>
-      {% endfor %}
-    </ul>
+
+  <body
+    class="bg-black text-white flex items-center justify-center min-h-screen w-full"
+  >
+    <div class="text-center w-full">
+      <!-- Logo -->
+      <div class="my-8 flex items-center justify-center">
+        <img
+          src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/logo.png"
+          alt="logo"
+          class="w-40"
+        />
+      </div>
+
+      <!-- Heading -->
+      <h2 class="text-xl font-normal text-white mb-1">
+        View your secret message & file
+      </h2>
+      <p class="text-sm text-gray-300">View Remaining {{ remaining_views }}</p>
+
+      <!-- Message Box (Secret Content) -->
+      <div
+        class="mt-8 flex flex-col items-center justify-center bg-[#1C1C1C] rounded-lg shadow-lg px-8 py-12 w-[60%] min-h-[400px] mx-auto"
+      >
+        <div class="w-full max-w-5xl rounded-lg p-6 space-y-6">
+          {% if message %}
+          <!-- Message -->
+          <div class="bg-black text-gray-200 rounded-lg p-4 leading-relaxed">
+            <p class="text-left">{{ message|linebreaksbr }}</p>
+          </div>
+          {% endif %}
+
+          <!-- Files Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for file in files %}
+            <div
+              class="bg-black rounded-lg overflow-hidden shadow-md"
+              data-file="{{ file.url }}"
+            >
+              <!-- Dynamic Preview -->
+              <div class="file-preview"></div>
+
+              <div
+                class="p-3 flex items-center justify-between text-gray-200 text-sm"
+              >
+                <div>
+                  <p>{{ file.name }}</p>
+                  <p class="text-xs text-gray-400">{{ file.size }}</p>
+                </div>
+                <a
+                  href="{{ file.url }}"
+                  target="_blank"
+                  download
+                  class="hover:opacity-80"
+                  style="color: #9c1ee9"
+                >
+                  <img
+                    src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
+                    alt="download"
+                    class="w-5 h-5"
+                  />
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Done Button -->
+          <div class="flex justify-center">
+            <button
+              class="text-white mt-6 w-[444px] px-10 py-3 rounded-lg hover:opacity-90"
+              style="background-color: #9c1ee9"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

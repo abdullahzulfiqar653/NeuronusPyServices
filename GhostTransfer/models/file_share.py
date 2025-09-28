@@ -7,6 +7,7 @@ from main.models.abstract.base import BaseModel
 class FileShare(BaseModel):
     files = models.JSONField(default=list)
     # Security / restrictions
+    message = models.TextField(null=True, blank=True)
     views_used = models.PositiveIntegerField(default=0)
     expires_at = models.DateTimeField(null=True)
     max_views = models.PositiveIntegerField(null=True)

@@ -92,3 +92,38 @@ class S3Service:
 
         except requests.exceptions.RequestException as e:
             return None
+
+    def get_file_size(self, s3_url):
+        """
+        Get the size of a file stored in S3/Spaces.
+        :param s3_url: The S3-style URL (s3://bucket/key)
+        :return: File size in bytes (int)
+        """
+        try:
+            bucket, key = self.get_bucket_and_s3_key(s3_url)
+            response = self.s3_client.head_object(Bucket=bucket, Key=key)
+            size = response["ContentLength"]  # size in bytes
+            logger.info(f"Size of {key} is {size} bytes.")
+            return self.format_file_size(size)
+        except Exception as e:
+            logger.error(f"Error fetching file size from S3: {e}")
+            raise Exception(f"Error fetching file size: {e}")
+
+    def format_file_size(self, size_in_bytes):
+        """
+        Convert file size in bytes into a human-readable string.
+        :param size_in_bytes: Size in bytes (int)
+        :return: str (e.g., '500 B', '2.5 KB', '10.2 MB', '1.4 GB')
+        """
+        try:
+            if size_in_bytes < 1024:
+                return f"{size_in_bytes} B"
+            elif size_in_bytes < 1024**2:
+                return f"{size_in_bytes / 1024:.2f} KB"
+            elif size_in_bytes < 1024**3:
+                return f"{size_in_bytes / (1024 ** 2):.2f} MB"
+            else:
+                return f"{size_in_bytes / (1024 ** 3):.2f} GB"
+        except Exception as e:
+            logger.error(f"Error formatting file size: {e}")
+            return f"{size_in_bytes} B"

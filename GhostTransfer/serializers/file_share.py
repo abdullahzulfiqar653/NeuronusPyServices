@@ -34,6 +34,7 @@ class FileShareSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "files",
+            "message",
             "password",
             "timezone",
             "max_views",

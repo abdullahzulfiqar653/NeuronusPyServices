@@ -1,3 +1,4 @@
+import os
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404
 
@@ -121,7 +122,9 @@ class FileShareAccessView(APIView):
     )
     def get(self, request, pk):
         share = get_object_or_404(FileShare, pk=pk)
-
+        remaining_views = (
+            share.max_views - share.views_used if share.max_views else "unlimited"
+        )
         # Check IP restriction
         client_ip = self.get_client_ip(request)
         if share.allowed_ip and share.allowed_ip != client_ip:
@@ -144,18 +147,26 @@ class FileShareAccessView(APIView):
                     self.template_password,
                     {
                         "share_id": share.id,
+                        "remaining_views": remaining_views,
                         "error": "Invalid or missing password" if password else None,
                     },
                 )
 
         # ✅ Passed all checks → generate presigned URLs
         presigned_files = self.generate_presigned_links(share.files)
-
         # Increment views_used
         share.views_used += 1
         share.save(update_fields=["views_used"])
 
-        return render(request, self.template_files, {"files": presigned_files})
+        return render(
+            request,
+            self.template_files,
+            {
+                "files": presigned_files,
+                "remaining_views": remaining_views,
+                "message": share.message,
+            },
+        )
 
     def get_client_ip(self, request):
         xff = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -164,4 +175,14 @@ class FileShareAccessView(APIView):
         return request.META.get("REMOTE_ADDR")
 
     def generate_presigned_links(self, files):
-        return [client.generate_presigned_url(file) for file in files]
+        result = []
+        for file in files:
+            presigned_url = client.generate_presigned_url(file)
+
+            # Get filename from path
+            name = os.path.basename(file)
+            # If you can fetch size (depends on storage, e.g. S3 HeadObject)
+            size = client.get_file_size(file)
+            result.append({"url": presigned_url, "name": name, "size": size})
+
+        return result
