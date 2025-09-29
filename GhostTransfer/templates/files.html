@@ -64,7 +64,7 @@
           {% endif %}
 
           <!-- Files Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 justify-items-center gap-6">
             {% for file in files %}
             <div
               class="bg-black rounded-lg overflow-hidden shadow-md"
@@ -75,7 +75,14 @@
 
            <div class="p-3 w-full flex items-start justify-between text-gray-200 text-sm">
             <div class="w-[90%] text-start break-words">
-            <p class=" break-words">{{ file.name }}</p>
+            <p class=" break-words overflow-hidden"
+             style="
+                  display: -webkit-box;
+                  -webkit-line-clamp: 3;   
+                  -webkit-box-orient: vertical;
+                  max-height: 70px;
+                  text-overflow: ellipsis;
+                ">{{ file.name }}</p>
             <p class="text-xs text-start text-gray-400">{{ file.size }}</p>
             </div>
             <a
