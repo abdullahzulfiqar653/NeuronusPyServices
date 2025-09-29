@@ -43,6 +43,7 @@ class FileSerializer(serializers.ModelSerializer):
             "name",
             "file",
             "size",
+            "s3_url",
             "metadata",
             "password",
             "directory",
@@ -55,7 +56,7 @@ class FileSerializer(serializers.ModelSerializer):
             "is_giving_permission",
             "is_password_protected",
         ]
-        read_only_fields = ["size", "directory", "content_type"]
+        read_only_fields = ["size", "directory", "content_type", "s3_url"]
 
     def get_is_password_protected(self, obj):
         """Check if the file is password protected"""
