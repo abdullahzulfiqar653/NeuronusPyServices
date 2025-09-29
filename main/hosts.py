@@ -15,6 +15,9 @@ host_patterns = patterns(
         rf"{ACTIVE_HOSTS['GhostTransfer']}", "GhostTransfer.urls", name="GhostTransfer"
     ),
     host(
+        rf"{ACTIVE_HOSTS['Download']}", "GhostTransfer.download_urls", name="Download"
+    ),
+    host(
         rf"{ACTIVE_HOSTS['PasswordManager']}",
         "PasswordManager.urls",
         name="PasswordManager",
