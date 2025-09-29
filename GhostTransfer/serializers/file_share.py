@@ -51,9 +51,10 @@ class FileShareSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Files must be in format: ['url1', 'url2', ...]."
             )
+        message = self.initial_data.get("message")
 
-        if not value:
-            raise serializers.ValidationError("Files list cannot be empty.")
+        if not value and not message:
+            raise serializers.ValidationError("Either provide files or a message.")
 
         return value
 
