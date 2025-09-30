@@ -39,7 +39,7 @@
           {% endif %}
 
           <!-- Files Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-6">
             {% for file in files %}
             <div
               class="bg-black rounded-lg overflow-hidden shadow-md"
@@ -47,65 +47,44 @@
             >
               <!-- Dynamic Preview -->
               <div class="file-preview">
-                {% if ".jpg" in file.name|lower or ".png" in file.name|lower or
-                ".jpeg" in file.name|lower or ".gif" in file.name|lower %}
-                <img
-                  src="{{ file.url }}"
-                  alt="{{ file.name }}"
-                  class="w-full h-40 object-cover"
-                  crossorigin="anonymous"
-                  onerror="this.onerror=null; this.src='https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png';"
-                />
-                {% elif ".mp4" in file.name|lower or ".webm" in file.name|lower
-                %}
-                <video
-                  src="{{ file.url }}"
-                  controls
-                  class="w-full h-40 object-cover"
-                ></video>
-                {% else %}
-                <div
-                  class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm"
-                >
-                  📄 {{ file.name }}
-                </div>
-                {% endif %}
+             {% if ".jpg" in file.name|lower or ".png" in file.name|lower or ".jpeg" in file.name|lower or ".gif" in file.name|lower %}
+               <img src="{{ file.url }}" alt="{{ file.name }}" class="w-full h-40 object-cover" crossorigin="anonymous"/>
+             {% elif ".mp4" in file.name|lower or ".webm" in file.name|lower %}
+              <video src="{{ file.url }}" controls class="w-full h-40 object-cover"></video>
+             {% else %}
+              <div class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm">
+                📄 {{ file.name }}
               </div>
+             {% endif %}
+          </div>
 
-              <div
-                class="p-3 w-full flex items-start justify-between text-gray-200 text-sm"
-              >
-                <div class="w-[90%] text-start break-words">
-                  <p
-                    class="break-words overflow-hidden"
-                    style="
-                      display: -webkit-box;
-                      -webkit-line-clamp: 3;
-                      -webkit-box-orient: vertical;
-                      max-height: 70px;
-                      text-overflow: ellipsis;
-                    "
-                  >
-                    {{ file.name }}
-                  </p>
-                  <p class="text-xs text-start text-gray-400">
-                    {{ file.size }}
-                  </p>
-                </div>
-                <a
-                  href="{{ file.url }}"
-                  target="_blank"
-                  download
-                  class="hover:opacity-80 flex-shrink-0"
-                  style="color: #9c1ee9"
-                >
-                  <img
-                    src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
-                    alt="download"
-                    class="w-5 h-5"
-                  />
-                </a>
-              </div>
+
+           <div class="p-3 w-full flex items-start justify-between text-gray-200 text-sm">
+            <div class="w-[90%] text-start break-words">
+            <p class=" break-words overflow-hidden"
+             style="
+                  display: -webkit-box;
+                  -webkit-line-clamp: 3;   
+                  -webkit-box-orient: vertical;
+                  max-height: 70px;
+                  text-overflow: ellipsis;
+                ">{{ file.name }}</p>
+            <p class="text-xs text-start text-gray-400">{{ file.size }}</p>
+            </div>
+            <a
+              href="{{ file.url }}"
+              target="_blank"
+              download
+              class="hover:opacity-80 flex-shrink-0"
+              style="color: #9c1ee9"
+            >
+              <img
+                src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
+                alt="download"
+                class="w-5 h-5"
+              />
+            </a>
+          </div>
             </div>
             {% endfor %}
           </div>
