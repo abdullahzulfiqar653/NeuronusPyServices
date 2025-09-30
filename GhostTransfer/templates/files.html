@@ -5,31 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Secret Message</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      function isImage(fileName) {
-        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll("[data-file]").forEach((card) => {
-          const fileUrl = card.dataset.file;
-          const fileName = card.dataset.name;
-          const preview = card.querySelector(".file-preview");
-
-          if (isImage(fileName)) {
-            preview.innerHTML = `<img src="${fileUrl}" alt="preview" class="w-full h-60 object-cover"/>`;
-          } else {
-            preview.innerHTML = `
-          <div class="w-full h-60 flex items-center justify-center bg-[#111] text-gray-400">
-            <img src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png"
-                 alt="file"
-                 class="w-40 h-40 opacity-80"/>
-          </div>
-        `;
-          }
-        });
-      });
-    </script>
   </head>
 
   <body
@@ -64,7 +39,7 @@
           {% endif %}
 
           <!-- Files Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {% for file in files %}
             <div
               class="bg-black rounded-lg overflow-hidden shadow-md"
@@ -72,44 +47,65 @@
             >
               <!-- Dynamic Preview -->
               <div class="file-preview">
-             {% if ".jpg" in file.name|lower or ".png" in file.name|lower or ".jpeg" in file.name|lower or ".gif" in file.name|lower %}
-               <img src="{{ file.url }}" alt="{{ file.name }}" class="w-full h-40 object-cover" />
-             {% elif ".mp4" in file.name|lower or ".webm" in file.name|lower %}
-              <video src="{{ file.url }}" controls class="w-full h-40 object-cover"></video>
-             {% else %}
-              <div class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm">
-                📄 {{ file.name }}
+                {% if ".jpg" in file.name|lower or ".png" in file.name|lower or
+                ".jpeg" in file.name|lower or ".gif" in file.name|lower %}
+                <img
+                  src="{{ file.url }}"
+                  alt="{{ file.name }}"
+                  class="w-full h-40 object-cover"
+                  crossorigin="anonymous"
+                  onerror="this.onerror=null; this.src='https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png';"
+                />
+                {% elif ".mp4" in file.name|lower or ".webm" in file.name|lower
+                %}
+                <video
+                  src="{{ file.url }}"
+                  controls
+                  class="w-full h-40 object-cover"
+                ></video>
+                {% else %}
+                <div
+                  class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm"
+                >
+                  📄 {{ file.name }}
+                </div>
+                {% endif %}
               </div>
-             {% endif %}
-          </div>
 
-
-           <div class="p-3 w-full flex items-start justify-between text-gray-200 text-sm">
-            <div class="w-[90%] text-start break-words">
-            <p class=" break-words overflow-hidden"
-             style="
-                  display: -webkit-box;
-                  -webkit-line-clamp: 3;   
-                  -webkit-box-orient: vertical;
-                  max-height: 70px;
-                  text-overflow: ellipsis;
-                ">{{ file.name }}</p>
-            <p class="text-xs text-start text-gray-400">{{ file.size }}</p>
-            </div>
-            <a
-              href="{{ file.url }}"
-              target="_blank"
-              download
-              class="hover:opacity-80 flex-shrink-0"
-              style="color: #9c1ee9"
-            >
-              <img
-                src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
-                alt="download"
-                class="w-5 h-5"
-              />
-            </a>
-          </div>
+              <div
+                class="p-3 w-full flex items-start justify-between text-gray-200 text-sm"
+              >
+                <div class="w-[90%] text-start break-words">
+                  <p
+                    class="break-words overflow-hidden"
+                    style="
+                      display: -webkit-box;
+                      -webkit-line-clamp: 3;
+                      -webkit-box-orient: vertical;
+                      max-height: 70px;
+                      text-overflow: ellipsis;
+                    "
+                  >
+                    {{ file.name }}
+                  </p>
+                  <p class="text-xs text-start text-gray-400">
+                    {{ file.size }}
+                  </p>
+                </div>
+                <a
+                  href="{{ file.url }}"
+                  target="_blank"
+                  download
+                  class="hover:opacity-80 flex-shrink-0"
+                  style="color: #9c1ee9"
+                >
+                  <img
+                    src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
+                    alt="download"
+                    class="w-5 h-5"
+                  />
+                </a>
+              </div>
             </div>
             {% endfor %}
           </div>
