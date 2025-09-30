@@ -47,15 +47,21 @@
             >
               <!-- Dynamic Preview -->
               <div class="file-preview">
-             {% if ".jpg" in file.name|lower or ".png" in file.name|lower or ".jpeg" in file.name|lower or ".gif" in file.name|lower %}
-               <img src="{{ file.url }}" alt="{{ file.name }}" class="w-full h-40 object-cover" crossorigin="anonymous"/>
-             {% elif ".mp4" in file.name|lower or ".webm" in file.name|lower %}
-              <video src="{{ file.url }}" controls class="w-full h-40 object-cover"></video>
-             {% else %}
-              <div class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm">
-                📄 {{ file.name }}
-              </div>
-             {% endif %}
+                {% if ".jpg" in file.name|lower or ".jpeg" in file.name|lower or ".png" in file.name|lower or ".gif" in file.name|lower or ".webp" in file.name|lower or ".bmp" in file.name|lower or ".svg" in file.name|lower or ".tiff" in file.name|lower or ".ico" in file.name|lower or ".heic" in file.name|lower %}
+                  <!-- Image preview -->
+                  <img src="{{ file.url }}" 
+                      alt="{{ file.name }}" 
+                      class="w-full h-40 object-cover" 
+                      crossorigin="anonymous"
+                      onerror="this.onerror=null; this.src='https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png';" />
+                {% else %}
+                  <!-- Generic file icon for all non-image types -->
+                  <div class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm">
+                    <img src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png" 
+                        alt="file" 
+                        class="w-16 h-16 opacity-80"/>
+                  </div>
+                {% endif %}
           </div>
 
 

@@ -107,7 +107,7 @@ class S3Service:
             return self.format_file_size(size)
         except Exception as e:
             logger.error(f"Error fetching file size from S3: {e}")
-            raise Exception(f"Error fetching file size: {e}")
+            return "Unknown"
 
     def format_file_size(self, size_in_bytes):
         """
