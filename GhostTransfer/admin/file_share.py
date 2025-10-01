@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FileShare
+from GhostTransfer.models.file_share import FileShare
 
 
 @admin.register(FileShare)
