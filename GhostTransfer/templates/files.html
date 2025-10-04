@@ -4,103 +4,312 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Secret Message</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        background-color: #000000;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        width: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      }
+      
+      .container {
+        text-align: center;
+        width: 100%;
+      }
+      
+      /* Logo Section */
+      .logo-container {
+        margin: 2rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .logo {
+        width: 10rem;
+      }
+      
+      /* Heading Section */
+      .heading {
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: #ffffff;
+        margin-bottom: 0.25rem;
+      }
+      
+      .subheading {
+        font-size: 0.875rem;
+        color: #d1d5db;
+      }
+      
+      /* Message Box */
+      .message-box {
+        margin-top: 2rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #1C1C1C;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        padding: 3rem 2rem;
+        width: 90%;
+        min-height: 400px;
+        margin-left: auto;
+        margin-right: auto;
+        border: 1px solid #27272a;
+      }
+      
+      @media (min-width: 640px) {
+        .message-box {
+          width: 70%;
+        }
+      }
+      
+      @media (min-width: 768px) {
+        .message-box {
+          width: 60%;
+        }
+      }
+      
+      /* Content Container */
+      .content-container {
+        width: 100%;
+        max-width: 64rem;
+        border-radius: 0.5rem;
+        padding: 0.25rem;
+        margin: 0 auto;
+      }
+      
+      @media (min-width: 768px) {
+        .content-container {
+          padding: 1.5rem;
+        }
+      }
+      
+      .content-container > * + * {
+        margin-top: 1.5rem;
+      }
+      
+      /* Message */
+      .message-content {
+        background-color: #000000;
+        color: #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        line-height: 1.625;
+        text-align: left;
+      }
+      
+      /* Files Grid */
+      .files-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      
+      @media (min-width: 640px) {
+        .files-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      
+      @media (min-width: 768px) {
+        .files-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      
+      /* File Card */
+      .file-card {
+        background-color: #000000;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      
+      /* File Preview */
+      .file-preview img {
+        width: 100%;
+        height: 10rem;
+        object-fit: cover;
+      }
+      
+      .file-preview-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 10rem;
+        background-color: #18181b;
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+      
+      .file-preview-placeholder img {
+        width: 4rem;
+        height: 4rem;
+        opacity: 0.8;
+      }
+      
+      /* File Info */
+      .file-info {
+        padding: 0.75rem;
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        color: #e5e7eb;
+        font-size: 0.875rem;
+      }
+      
+      .file-details {
+        width: 90%;
+        text-align: left;
+        word-break: break-word;
+      }
+      
+      .file-name {
+        word-break: break-word;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        max-height: 70px;
+        text-overflow: ellipsis;
+      }
+      
+      .file-size {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        text-align: left;
+      }
+      
+      /* Download Button */
+      .download-btn {
+        color: #9c1ee9;
+        flex-shrink: 0;
+      }
+      
+      .download-btn:hover {
+        opacity: 0.8;
+      }
+      
+      .download-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+      
+      /* Done Button */
+      .done-btn-container {
+        display: flex;
+        justify-content: center;
+      }
+      
+      .done-btn {
+        color: #ffffff;
+        margin-top: 1.5rem;
+        width: 444px;
+        padding: 0.75rem 2.5rem;
+        border-radius: 0.5rem;
+        background-color: #9c1ee9;
+        display: inline-block;
+        text-align: center;
+        text-decoration: none;
+      }
+      
+      .done-btn:hover {
+        opacity: 0.9;
+      }
+    </style>
   </head>
 
-  <body
-    class="bg-black text-white flex items-center justify-center min-h-screen w-full"
-  >
-    <div class="text-center w-full">
+  <body>
+    <div class="container">
       <!-- Logo -->
-      <div class="my-8 flex items-center justify-center">
+      <div class="logo-container">
         <img
           src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/logo.png"
           alt="logo"
-          class="w-40"
+          class="logo"
         />
       </div>
 
       <!-- Heading -->
-      <h2 class="text-xl font-normal text-white mb-1">
+      <h2 class="heading">
         View your secret message & file
       </h2>
-      <p class="text-sm text-gray-300">View Remaining {{ remaining_views }}</p>
+      <p class="subheading">View Remaining {{ remaining_views }}</p>
 
       <!-- Message Box (Secret Content) -->
-      <div
-        class="mt-8 mb-2 flex flex-col items-center justify-center bg-[#1C1C1C] rounded-lg shadow-lg px-8 py-12 w-[90%] sm:w-[70%] md:w-[60%] min-h-[400px] mx-auto border border-zinc-800"
-      >
-        <div class="w-full max-w-5xl rounded-lg p-1 md:p-6 space-y-6">
+      <div class="message-box">
+        <div class="content-container">
           {% if message %}
           <!-- Message -->
-          <div class="bg-black text-gray-200 rounded-lg p-4 leading-relaxed">
+          <div class="message-content">
             <p class="text-left">{{ message|linebreaksbr }}</p>
           </div>
           {% endif %}
 
           <!-- Files Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-6">
+          <div class="files-grid">
             {% for file in files %}
-            <div
-              class="bg-black rounded-lg overflow-hidden shadow-md"
-              data-file="{{ file.url }}"
-            >
+            <div class="file-card" data-file="{{ file.url }}">
               <!-- Dynamic Preview -->
               <div class="file-preview">
                 {% if ".jpg" in file.name|lower or ".jpeg" in file.name|lower or ".png" in file.name|lower or ".gif" in file.name|lower or ".webp" in file.name|lower or ".bmp" in file.name|lower or ".svg" in file.name|lower or ".tiff" in file.name|lower or ".ico" in file.name|lower or ".heic" in file.name|lower %}
                   <!-- Image preview -->
                   <img src="{{ file.url }}" 
                       alt="{{ file.name }}" 
-                      class="w-full h-40 object-cover" 
                       crossorigin="anonymous"
                       onerror="this.onerror=null; this.src='https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png';" />
                 {% else %}
                   <!-- Generic file icon for all non-image types -->
-                  <div class="flex items-center justify-center w-full h-40 bg-zinc-900 text-gray-400 text-sm">
+                  <div class="file-preview-placeholder">
                     <img src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/icons8-file-256.png" 
-                        alt="file" 
-                        class="w-16 h-16 opacity-80"/>
+                        alt="file" />
                   </div>
                 {% endif %}
-          </div>
+              </div>
 
-
-           <div class="p-3 w-full flex items-start justify-between text-gray-200 text-sm">
-            <div class="w-[90%] text-start break-words">
-            <p class=" break-words overflow-hidden"
-             style="
-                  display: -webkit-box;
-                  -webkit-line-clamp: 3;   
-                  -webkit-box-orient: vertical;
-                  max-height: 70px;
-                  text-overflow: ellipsis;
-                ">{{ file.name }}</p>
-            <p class="text-xs text-start text-gray-400">{{ file.size }}</p>
-            </div>
-            <a
-              href="{{ file.url }}"
-              target="_blank"
-              download
-              class="hover:opacity-80 flex-shrink-0"
-              style="color: #9c1ee9"
-            >
-              <img
-                src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
-                alt="download"
-                class="w-5 h-5"
-              />
-            </a>
-          </div>
+              <div class="file-info">
+                <div class="file-details">
+                  <p class="file-name">{{ file.name }}</p>
+                  <p class="file-size">{{ file.size }}</p>
+                </div>
+                <a
+                  href="{{ file.url }}"
+                  target="_blank"
+                  download
+                  class="download-btn"
+                >
+                  <img
+                    src="https://neuroservices.lon1.cdn.digitaloceanspaces.com/static/ghosttransfer/download.png"
+                    alt="download"
+                    class="download-icon"
+                  />
+                </a>
+              </div>
             </div>
             {% endfor %}
           </div>
 
           <!-- Done Button -->
-          <div class="flex justify-center">
+          <div class="done-btn-container">
             <a
               href="https://ghosttransfer.tech/"
-              class="text-white mt-6 w-[444px] px-10 py-3 rounded-lg hover:opacity-90 inline-block text-center"
-              style="background-color: #9c1ee9"
+              class="done-btn"
             >
               Done
             </a>
