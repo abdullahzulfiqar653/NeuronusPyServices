@@ -201,3 +201,8 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Allow long-running uploads
+FILE_UPLOAD_TIMEOUT = 900  # 15 minutes
+DATA_UPLOAD_MAX_MEMORY_SIZE = None  # Disable in-memory upload size limit
+FILE_UPLOAD_MAX_MEMORY_SIZE = 0  # Stream file uploads directly to disk (not memory)
