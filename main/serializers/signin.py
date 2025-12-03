@@ -8,9 +8,6 @@ from main.utils import hash_passphrase
 
 
 class UserSignInSerializer(serializers.Serializer):
-    access = serializers.CharField(read_only=True)
-    refresh = serializers.CharField(read_only=True)
-    address = serializers.CharField(read_only=True)
     pass_phrase = serializers.CharField(write_only=True)
 
     def create(self, validated_data):
@@ -19,46 +16,28 @@ class UserSignInSerializer(serializers.Serializer):
 
         user = User.objects.filter(username=pass_phrase).first()
         if not user:
-            url = "https://apiresonance.neuronus.net/api/user/login"
-            payload = {"seed": pass_phrase}
-            try:
-                response = requests.post(url, json=payload)
-                if response.status_code == 200:
-                    response_data = response.json()
-                    user = User.objects.create(username=pass_phrase)
-                    user.set_password(hash)
-                    user.save()
+            raise AuthenticationFailed("Invalid Seed.")
 
-                    address = response_data.get("identity", {}).get("address", None)
-                    user.profile.address = address
-                    user.profile.save()
-                else:
-                    AuthenticationFailed("Invalid Seed.")
-            except:
-                AuthenticationFailed("Resonance Server down please contact admin Seed.")
-        if user:
-            user_profile = user.profile
-            if not user_profile.address:
-                url = "https://apiresonance.neuronus.net/api/user/login"
-                payload = {"seed": pass_phrase}
-                try:
-                    response = requests.post(url, json=payload)
-                    if response.status_code == 200:
-                        response_data = response.json()
+        if not user.check_password(hash):
+            raise AuthenticationFailed("Invalid Seed.")
 
-                        address = response_data.get("identity", {}).get("address", None)
-                        user_profile.address = address
-                        user_profile.save()
+        self.refresh = RefreshToken.for_user(user)
+        self.user = user
 
-                except:
-                    raise AuthenticationFailed(
-                        "Resonance Server down, please contact admin."
-                    )
+        return user
 
-        if user and user.check_password(hash):
-            refresh = RefreshToken.for_user(user)
-            return {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
+    def to_representation(self, instance):
+        """Format the response"""
+        profile = self.user.profile
+
+        return {
+            "access": str(self.refresh.access_token),
+            "refresh": str(self.refresh),
+            "cryptographic_data": {
+                "public_key": profile.public_key,
+                "encrypted_private_key": profile.encrypted_private_key,
+                "encrypted_private_key_iv": profile.encrypted_private_key_iv,
+                "encrypted_private_key_tag": profile.encrypted_private_key_tag,
+                "enc_salt": profile.enc_salt,
             }
-        raise AuthenticationFailed("Invalid Seed.")
+        }
