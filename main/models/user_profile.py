@@ -10,6 +10,13 @@ class UserProfile(BaseModel):
     address = models.CharField(max_length=512, null=True, blank=True)
     total_size = models.PositiveBigIntegerField(default=0)
     address = models.CharField(max_length=512, null=True, blank=True)
+    public_key = models.TextField(null=True, blank=True)
+    encrypted_private_key = models.TextField(null=True, blank=True) 
+    encrypted_private_key_iv = models.CharField(max_length=128, null=True, blank=True) 
+    encrypted_private_key_tag = models.CharField(max_length=128, null=True, blank=True) 
+    enc_salt = models.CharField(max_length=128, null=True, blank=True)
+    
+
     
     def add_size(self, size):
         self.total_size += size

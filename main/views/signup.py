@@ -10,38 +10,64 @@ class UserSignUpView(generics.CreateAPIView):
     serializer_class = UserSignUpSerializer
 
     @swagger_auto_schema(
-        operation_summary="Create a new user with a unique passphrase (seed)",
-        operation_description="""
-            This endpoint is used to create a new user by generating a secure and unique passphrase (seed).
-
-            **How it works**:
-            - Sends a `POST` request with no body.
-            - Generates a unique `pass_phrase` (seed) using internal logic.
-            - Sends the seed to Resonance API for registration and login.
-            - Stores the returned identity address in the user's profile.
-            - Returns the generated `pass_phrase`.
-
-             If an error occurs during the external API call, it will return a 400 error.
-            """,
-        request_body=None,
+        operation_summary="Register a new user",
+        operation_description="Create a new user with cryptographic keys",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['pass_phrase', 'public_key', 'encrypted_private_key', 
+                     'encrypted_private_key_iv', 'encrypted_private_key_tag', 'enc_salt'],
+            properties={
+                'pass_phrase': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='User passphrase (min 8 characters)',
+                    example='yellow-sky-bird-frost'
+                ),
+                'public_key': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Public key in PEM format',
+                    example='-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----'
+                ),
+                'encrypted_private_key': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Encrypted private key',
+                    example='U2FsdGVkX19/abc123def456ghi789...'
+                ),
+                'encrypted_private_key_iv': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Initialization Vector for AES encryption',
+                    example='a1b2c3d4e5f67890'
+                ),
+                'encrypted_private_key_tag': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Authentication tag for AES-GCM',
+                    example='tag1234567890abcd'
+                ),
+                'enc_salt': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description='Salt for key derivation',
+                    example='salt1234567890abcdef'
+                ),
+            }
+        ),
         responses={
             201: openapi.Response(
-                description="User created successfully.",
+                description="User created successfully",
                 examples={
                     "application/json": {
-                        "pass_phrase": "yellow-sky-bird-frost"  # Example seed
+                        "success": True,
+                        "message": "User created successfully"
                     }
-                },
+                }
             ),
             400: openapi.Response(
-                description="Bad request. Could not create user.",
+                description="Bad request",
                 examples={
                     "application/json": {
-                        "error": "Failed to create passphrase please refresh page"
+                        "error": "Try again with different user registration"
                     }
-                },
+                }
             ),
-        },
+        }
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
