@@ -72,7 +72,6 @@ class FileShareSerializer(serializers.ModelSerializer):
                 )
             local_tz = pytz.timezone(tz_name)
             value = timezone.make_aware(value, local_tz)
-            print("Aware datetime:", value)
             if value <= timezone.now():
                 raise serializers.ValidationError(
                     "Expiration time must be in the future."

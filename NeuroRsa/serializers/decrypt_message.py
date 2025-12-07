@@ -66,8 +66,6 @@ class DecryptMessageSerializer(serializers.Serializer):
             # Decrypt the message
             with private_key.unlock("row"):
                 decrypted_message = private_key.decrypt(encrypted_message)
-            print("\n🔓 Decrypted Message: 🔓\n")
-            print(decrypted_message)
         except:  # noqa
             raise serializers.ValidationError(
                 {"error": ["Decryption failed, Invalid keypair selected."]}

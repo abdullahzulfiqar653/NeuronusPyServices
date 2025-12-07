@@ -47,16 +47,19 @@ class KeyPairSerializer(serializers.ModelSerializer):
         user_id = pgpy.PGPUID.new(name, email=email)
 
         # Bind the user ID to the key
-        key.add_uid(user_id, usage={pgpy.constants.KeyFlags.Sign, pgpy.constants.KeyFlags.EncryptCommunications},
-                    hashes=[pgpy.constants.HashAlgorithm.SHA256],
-                    ciphers=[pgpy.constants.SymmetricKeyAlgorithm.AES256],
-                    compression=[pgpy.constants.CompressionAlgorithm.ZLIB])
+        key.add_uid(
+            user_id,
+            usage={
+                pgpy.constants.KeyFlags.Sign,
+                pgpy.constants.KeyFlags.EncryptCommunications,
+            },
+            hashes=[pgpy.constants.HashAlgorithm.SHA256],
+            ciphers=[pgpy.constants.SymmetricKeyAlgorithm.AES256],
+            compression=[pgpy.constants.CompressionAlgorithm.ZLIB],
+        )
 
-        print("\n🔹 PUBLIC KEY (Upload This to PGP Websites) 🔹\n")
         public_key = str(key.pubkey)
-        print("\n🔒 PRIVATE KEY (DO NOT SHARE!) 🔒\n")
         private_key = str(key)
-        print("\n✅ PGP keys generated successfully!")
 
         key_pair = KeyPair.objects.create(
             user=user,
@@ -64,7 +67,7 @@ class KeyPairSerializer(serializers.ModelSerializer):
             email=email,
             passphrase=passphrase,
             private_key=private_key,
-            public_key=public_key
+            public_key=public_key,
         )
         return key_pair
 
