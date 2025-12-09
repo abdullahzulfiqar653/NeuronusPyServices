@@ -70,10 +70,7 @@ class PasswordListCreateView(generics.ListCreateAPIView):
         },
     )
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return super().post(request, *args, **kwargs)
 
 
 class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
