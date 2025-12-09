@@ -1,5 +1,6 @@
 from rest_framework import generics, filters, status
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
 from PasswordManager.serializers.password import PasswordSerializer
 from PasswordManager.models.password import Password
 from drf_yasg.utils import swagger_auto_schema
@@ -69,7 +70,10 @@ class PasswordListCreateView(generics.ListCreateAPIView):
         },
     )
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PasswordRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
