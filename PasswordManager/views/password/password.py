@@ -1,5 +1,6 @@
 from rest_framework import generics, filters, status
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
 from PasswordManager.serializers.password import PasswordSerializer
 from PasswordManager.models.password import Password
 from drf_yasg.utils import swagger_auto_schema

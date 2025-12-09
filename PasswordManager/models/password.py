@@ -3,12 +3,12 @@ from main.models.abstract.base import BaseModel
 
 
 class Password(BaseModel):
-    url = models.CharField(max_length=255, null=True)
-    notes = models.TextField(null=True)
-    title = models.CharField(max_length=255)
-    username = models.CharField(max_length=255, null=True)
-    password = models.CharField(max_length=255, null=True)
-    emoji = models.CharField(max_length=10, null=True)
+    url = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    title = models.TextField()
+    username = models.TextField(null=True, blank=True)
+    password = models.TextField(null=True, blank=True)
+    emoji = models.TextField(null=True, blank=True)    
     user = models.ForeignKey(
         "auth.User", on_delete=models.CASCADE, related_name="passwords"
     )
