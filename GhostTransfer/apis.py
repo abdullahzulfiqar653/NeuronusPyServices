@@ -12,7 +12,8 @@ urlpatterns = [
         FileShareView.as_view(),
         name="generate-file-share-url-view",
     ),
-    path("share/<str:pk>/", FileShareAccessView.as_view(), name="fileshare-access"),
+    path("share/<str:pk>", FileShareAccessView.as_view(), name="fileshare-access"),
+    
     # =====================================================
     # Media
     # =====================================================

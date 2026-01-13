@@ -167,8 +167,8 @@ class FileShareAccessView(APIView):
                     },
                 )
 
-        # ✅ Passed all checks → generate presigned URLs
-        presigned_files = self.generate_presigned_links(share.files)
+        # ✅ Passed all checks → fetch file data
+        files_data = self.get_files_data(share.files)
         # Increment views_used
         share.views_used += 1
         share.save(update_fields=["views_used"])
@@ -177,7 +177,7 @@ class FileShareAccessView(APIView):
             request,
             self.template_files,
             {
-                "files": presigned_files,
+                "files": files_data,
                 "remaining_views": remaining_views,
                 "message": share.message,
             },
@@ -189,15 +189,16 @@ class FileShareAccessView(APIView):
             return xff.split(",")[0].strip()
         return request.META.get("REMOTE_ADDR")
 
-    def generate_presigned_links(self, files):
+    def get_files_data(self, files):
+        """
+        For direct hash decryption, 'files' contains the actual encrypted data strings.
+        We return them as the 'url' field which the frontend uses for decryption.
+        """
         result = []
-        for file in files:
-            presigned_url = client.generate_presigned_url(file)
-
-            # Get filename from path
-            name = os.path.basename(file)
-            # If you can fetch size (depends on storage, e.g. S3 HeadObject)
-            size = client.get_file_size(file)
-            result.append({"url": presigned_url, "name": name, "size": size})
-
+        for hash_str in files:
+            result.append({
+                "url": hash_str,
+                "name": "Secret File",  # Generic name as the real name is inside the hash
+                "size": "Unknown"
+            })
         return result

@@ -9,14 +9,35 @@ logger = logging.getLogger(__name__)
 
 
 class S3Service:
-    def __init__(self, bucket="neuropyservices"):
+    def __init__(self, bucket=None):
         self.s3_client = settings.S3_CLIENT
-        self.bucket = bucket
+        self.bucket = bucket or getattr(settings, "DIGITALOCEAN_SPACE_NAME", "neuropyservices")
 
     def get_bucket_and_s3_key(self, s3_url):
+        """
+        Extract bucket and key from S3 URL.
+        Handles both formats:
+        - s3://bucket/key (full URL)
+        - key (just the key, uses default bucket)
+        """
+        if not s3_url or not s3_url.strip():
+            raise ValueError("S3 URL cannot be empty")
+        
         parsed_url = urlparse(s3_url)
         bucket = parsed_url.netloc
         key = parsed_url.path.lstrip("/")
+        
+        # If bucket is empty (URL doesn't have s3://bucket/ format),
+        # treat the entire URL as a key and use the default bucket
+        if not bucket:
+            # If the URL doesn't start with s3://, treat the whole thing as a key
+            if not s3_url.startswith("s3://"):
+                key = s3_url.lstrip("/")
+            bucket = self.bucket
+        
+        if not key:
+            raise ValueError(f"Invalid S3 URL format: {s3_url}. Key cannot be empty.")
+        
         return bucket, key
 
     def upload_file(self, file_obj, s3_key, is_public=True):
