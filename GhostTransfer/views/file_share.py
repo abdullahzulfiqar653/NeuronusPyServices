@@ -8,11 +8,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import CreateAPIView
 
 from rest_framework import status
-from main.services.s3 import S3Service
 from GhostTransfer.models.file_share import FileShare
 from GhostTransfer.serializers.file_share import FileShareSerializer
-
-client = S3Service()
 
 
 class FileShareView(CreateAPIView):
