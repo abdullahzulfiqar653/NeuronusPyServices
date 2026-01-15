@@ -625,6 +625,39 @@
     }
 
     /**
+     * Decrypt a message (text content)
+     */
+    async function decryptMessage(encryptedMessageBase64, userKey = null) {
+      try {
+        if (!encryptedMessageBase64) {
+          return null;
+        }
+
+        const key = await getEncryptionKey(userKey);
+
+        // Decrypt the encrypted message data
+        const decryptedString = await decryptWithAES(encryptedMessageBase64, key);
+
+        // Parse the decrypted data (h: hash, m: mimeType, d: data)
+        const hashData = JSON.parse(decryptedString);
+        const base64Data = hashData.d || hashData.data || hashData.base64;
+
+        if (!base64Data) {
+          throw new Error("Decrypted message data is empty");
+        }
+
+        // Convert base64 to text
+        const binaryString = atob(base64Data);
+        const text = binaryString;
+
+        return text;
+
+      } catch (error) {
+        throw new Error(`Message decryption failed: ${error.message}`);
+      }
+    }
+
+    /**
      * Decrypt and display file on the page
      */
     async function decryptAndDisplayFile(encryptedHash, fileIndex, fileName, userKey) {
@@ -694,20 +727,33 @@
     }
 
     function getKeyFromUrl() {
-      const url = window.location.href;
-      const keyIndex = url.indexOf('key=');
-      if (keyIndex === -1) {
-        return null;
-      }
+      try {
+        // Use URLSearchParams which safely handles URL encoding
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get('key');
+        return key;
+      } catch (error) {
+        // Fallback to manual parsing if URLSearchParams fails
+        const url = window.location.href;
+        const keyIndex = url.indexOf('key=');
+        if (keyIndex === -1) {
+          return null;
+        }
 
-      let key = url.substring(keyIndex + 4);
-      const nextAmpersand = key.indexOf('&');
-      if (nextAmpersand !== -1) {
-        key = key.substring(0, nextAmpersand);
-      }
+        let key = url.substring(keyIndex + 4);
+        const nextAmpersand = key.indexOf('&');
+        if (nextAmpersand !== -1) {
+          key = key.substring(0, nextAmpersand);
+        }
 
-      const decodedKey = decodeURIComponent(key);
-      return decodedKey;
+        // Try to decode, but catch errors if it's not valid URI encoding
+        try {
+          return decodeURIComponent(key);
+        } catch (e) {
+          // If decode fails, return the key as-is (it might not be URI encoded)
+          return key;
+        }
+      }
     }
 
     // Initialize decryption when page loads
@@ -728,6 +774,29 @@
         }
       } else {
         await setupEncryptionEnvironment(userKey);
+      }
+
+      // Decrypt and display message if it exists
+      const messageElement = document.querySelector('.message-content');
+      if (messageElement) {
+        const encryptedMessage = messageElement.getAttribute('data-encrypted-message');
+        if (encryptedMessage) {
+          try {
+            const decryptedMessage = await decryptMessage(encryptedMessage, userKey);
+            const messageParagraph = messageElement.querySelector('p');
+            if (messageParagraph) {
+              // Convert newlines to <br> tags
+              const formattedMessage = decryptedMessage.replace(/\n/g, '<br>');
+              messageParagraph.innerHTML = formattedMessage;
+            }
+          } catch (error) {
+            console.error('Failed to decrypt message:', error);
+            const messageParagraph = messageElement.querySelector('p');
+            if (messageParagraph) {
+              messageParagraph.textContent = 'Failed to decrypt message.';
+            }
+          }
+        }
       }
 
       // Get all file cards
@@ -765,8 +834,8 @@
       <div class="content-container">
         {% if message %}
         <!-- Message -->
-        <div class="message-content">
-          <p class="text-left">{{ message|linebreaksbr }}</p>
+        <div class="message-content" data-encrypted-message="{{ message }}">
+          <p class="text-left">Decrypting message...</p>
         </div>
         {% endif %}
 
